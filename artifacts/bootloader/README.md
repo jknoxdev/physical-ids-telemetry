@@ -22,6 +22,8 @@ To bypass the "cannot read IDR" error, you must use the **dedicated SWD pins** l
 
 ![alt text](./img/rp2040-zero-raspberry-pi-pico-com-usb-c.jpeg)
 
+
+
 ---
 
 ## 💻 Software & Commands
@@ -60,3 +62,4 @@ pinouts from:
 https://wiki.makerdiary.com/nrf52840-mdk-usb-dongle/hardware/
 
 https://www.waveshare.com/wiki/RP2040-Zero?srsltid=AfmBOooy5xTg69wj_1fWa-nLf3bzDKfl2c1daC3Vd5oTZTt03VSa2Wgo
+
