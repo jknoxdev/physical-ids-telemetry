@@ -7,15 +7,16 @@ The lima-node is a low-power kinetic / physical intrusion detection system. Util
 * **Gateway:** Raspberry Pi Zero (Nano) running a hardened Linux stack
 * **Connectivity:** Bluetooth Low Energy (BLE) 5.0 with Coded PHY support for extended range
 
+## System Overview
 1. The LIMA Node (The "Edge")
-• Hardware: nRF52840 + MPU6050 + Barometric Sensor.
-• Software: Zephyr RTOS + CryptoCell-310.
+* Hardware: nRF52840 + MPU6050 + Barometric Sensor.
+* Software: Zephyr RTOS + CryptoCell-310.
 
 ◇ Function: Detects "Integrity Events" (Door open, Case tamper) and signs the alert.
 
 2. The LIMA Gateway (The "Bridge")
-• Hardware: Raspberry Pi or an nRF7002 (Wi-Fi) development kit.
-• Software: MQTT Broker + Python/Node.js Logic.
+* Hardware: Raspberry Pi or an nRF7002 (Wi-Fi) development kit.
+* Software: MQTT Broker + Python/Node.js Logic.
 
 ◇ Function: Translates the local BLE/Thread signal into a phone notification (via Pushbullet or Pushover).
 
