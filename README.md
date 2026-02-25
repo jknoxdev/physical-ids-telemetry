@@ -60,7 +60,7 @@ Each fires independently. An attacker must defeat both sensors simultaneously to
 
 ## Security Design
 
-- **Every event is signed** — ECDSA-P256 via CryptoCell-310 hardware accelerator (~50ms, minimal power)
+- **Every event is signed & encrypted** — ECDSA-P256 via CryptoCell-310 hardware accelerator (~50ms, minimal power)
 - **Per-event nonce** — prevents replay attacks
 - **Tamper events are first-class** — a failed signature verification is itself logged and alerted
 - **SQLite written first** — audit trail is intact regardless of internet connectivity
@@ -158,7 +158,7 @@ Major technical decisions are documented in [`docs/architecture/adr/`](docs/arch
 
 - [ ] Firmware: IMU + barometric sensor drivers (Zephyr I2C)
 - [ ] Firmware: Event aggregator with independent OR trigger logic
-- [ ] Firmware: CryptoCell-310 ECDSA-P256 signing
+- [ ] Firmware: CryptoCell-310 ECDSA-P256 signing & encryption
 - [ ] Firmware: BLE advertisement with signed payload
 - [ ] Gateway: BlueZ BLE scanner + paho MQTT publisher
 - [ ] Gateway: Mosquitto broker + event router
