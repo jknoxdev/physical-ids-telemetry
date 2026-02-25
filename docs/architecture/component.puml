@@ -1,0 +1,121 @@
+@startuml component
+!pragma layout smetana
+
+skinparam {
+    BackgroundColor #1a1a2e
+    ArrowColor #7EC8E3
+    ArrowFontColor #CCCCCC
+    ArrowFontSize 10
+    DefaultFontName Arial
+    DefaultFontColor #E0E0E0
+    DefaultFontSize 11
+    ComponentBorderColor #4A90D9
+    ComponentBorderThickness 2
+    ComponentBackgroundColor #0f3460
+    ComponentFontColor #FFFFFF
+    ComponentFontSize 12
+    PackageBorderColor #FF6B35
+    PackageBorderThickness 2
+    PackageBackgroundColor #1a1a2e
+    PackageFontColor #FF6B35
+    PackageFontSize 13
+    DatabaseBorderColor #9B59B6
+    DatabaseBackgroundColor #2C0E3F
+    DatabaseFontColor #FFFFFF
+    InterfaceBorderColor #7EC8E3
+    InterfaceBackgroundColor #0f3460
+    NoteBorderColor #27AE60
+    NoteBackgroundColor #0D2818
+    NoteFontColor #AAAAAA
+    NoteFontSize 10
+}
+
+title <size:18><color:#7EC8E3><b>L.I.M.A. — Component Diagram</b></color></size>\n<size:12><color:#888888>Node + Gateway Internals</color></size>
+
+package "LIMA Node\n[nRF52840 / Zephyr RTOS]" as node_pkg {
+
+    package "Sensor Layer" as sensors {
+        [MPU6050\nIMU] as imu #0f3460
+        [BMP280\nBarometric] as baro #0f3460
+    }
+
+    package "Zephyr Subsystems" as zephyr {
+        [Motion\nDiscriminator] as motion #1a3060
+        [Pressure\nMonitor] as pressure #1a3060
+        [Event\nAggregator] as aggregator #1a3060
+        [CryptoCell-310\nSigner] as crypto #2a1a4a
+    }
+
+    package "Connectivity" as connectivity {
+        [BLE 5.0 Stack\nCoded PHY] as ble #0f3460
+    }
+
+    imu --> motion : <color:#AAAAAA>raw accel/gyro\n[I2C]</color>
+    baro --> pressure : <color:#AAAAAA>pressure delta\n[I2C]</color>
+    motion --> aggregator : <color:#AAAAAA>motion event</color>
+    pressure --> aggregator : <color:#AAAAAA>pressure event</color>
+    aggregator --> crypto : <color:#AAAAAA>integrity event</color>
+    crypto --> ble : <color:#7EC8E3>signed payload</color>
+}
+
+package "LIMA Gateway\n[Raspberry Pi Zero]" as gateway_pkg {
+
+    package "Ingestion" as ingestion {
+        [BLE Scanner\nblueZ / hci] as scanner #0f3460
+        [MQTT Publisher\npaho] as publisher #0f3460
+    }
+
+    package "Broker" as broker_pkg {
+        [Mosquitto\nMQTT Broker] as mosquitto #1a3060
+    }
+
+    package "Event Processing" as processing {
+        [Event Router\nsubscriber] as router #1a3060
+        [Signature\nVerifier] as verifier #2a1a4a
+    }
+
+    package "Persistence" as persistence {
+        database "SQLite\nAudit Log" as sqlite #2C0E3F
+        [Queue Manager\nflush-on-connect] as queue #1a3060
+    }
+
+    package "Egress" as egress {
+        [Push\nNotifier] as push_h #0f3460
+        [SIEM\nForwarder] as siem_h #0f3460
+        [Cloud\nUploader] as cloud_h #0f3460
+    }
+
+    scanner --> publisher : <color:#AAAAAA>BLE advertisement\nraw payload</color>
+    publisher --> mosquitto : <color:#AAAAAA>MQTT publish\nlima/events</color>
+    mosquitto --> router : <color:#AAAAAA>subscribe\nlima/#</color>
+    router --> verifier : <color:#AAAAAA>verify signature</color>
+    verifier --> sqlite : <color:#9B59B6>write event\n[always]</color>
+    verifier --> queue : <color:#AAAAAA>queue for egress</color>
+    queue --> push_h : <color:#7EC8E3>flush when online</color>
+    queue --> siem_h : <color:#7EC8E3>flush when online</color>
+    queue --> cloud_h : <color:#7EC8E3>flush when online</color>
+}
+
+ble --> scanner : <color:#FF6B35>BLE 5.0 Coded PHY\n[Encrypted + Signed]</color>
+
+note right of crypto
+  <color:#27AE60>CryptoCell-310
+  hardware accelerated
+  ECDSA-P256 signing
+  per-event nonce</color>
+end note
+
+note right of sqlite
+  <color:#27AE60>Always written first
+  Queue-and-flush pattern
+  Survives internet outage
+  Local audit trail intact</color>
+end note
+
+note bottom of verifier
+  <color:#27AE60>Rejects unsigned
+  or tampered events
+  before any egress</color>
+end note
+
+@enduml
