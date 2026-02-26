@@ -15,7 +15,7 @@
 | GND | GND | |
 | SCL |  SCL | I2C clock |
 | SDA | SDA | I2C bidirectional  |
-| INT | GPIO P6 | Interrupt low on m-threshold, ARMED → EVENT_DETECTED |
+| INT | GPIO P8 | Interrupt low on m-threshold, ARMED → EVENT_DETECTED |
 | AD0 | GND | I2C address select — GND = 0x68 (default), 3.3V = 0x69 |
 | XDA | - | Aux Data — secondary I2C bus for external magnetometer |
 | XCL | - | Aux Clock — pairs with XDA |
