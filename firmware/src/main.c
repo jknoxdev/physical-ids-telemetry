@@ -17,15 +17,42 @@
  *               → transitions to next state
  */
 
+//  main.c
+// ├── #includes + defines        (top)
+// ├── hardware globals           (led, mpu, accel)
+// ├── FSM states + handlers      (the big middle section)
+// ├── fsm_dispatch()             
+// ├── sensor_thread_fn()         
+// ├── fsm_thread_fn()            
+// ├── K_THREAD_DEFINE x2         (very bottom)
+// └── main()
+
 #include <zephyr/kernel.h>
+#include <zephyr/kernel/thread.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/logging/log.h>
 #include <math.h>
 
 #include "events.h"
+#include <zephyr/drivers/gpio.h>
+
+/* Use the pin numbers defined in your overlay */
+#define I2C0_SCL_PIN 19
+#define I2C0_SDA_PIN 20
 
 LOG_MODULE_REGISTER(lima_fsm, LOG_LEVEL_DBG);
+
+/* ── Forward Declarations ────────────────────────────────────────────────── */
+int lima_post_event(const lima_event_t *evt);
+
+/* ── Forward Declarations for State Handlers ────────────────────────────── */
+static void state_boot_enter(void);
+static void state_calibrating_enter(void);
+static void state_armed_enter(void);
+static void state_armed_exit(void);
+static void state_event_detected_enter(void);
+static void state_cooldown_enter(void);
 
 /* ── Board definitions ───────────────────────────────────────────────────── */
 
@@ -34,10 +61,10 @@ LOG_MODULE_REGISTER(lima_fsm, LOG_LEVEL_DBG);
 /* ── Configuration ───────────────────────────────────────────────────────── */
 
 #define FSM_MSGQ_DEPTH          16
-#define FSM_STACK_SIZE          2048
+// #define FSM_STACK_SIZE          2048
 #define FSM_THREAD_PRIORITY     5
 
-#define SENSOR_STACK_SIZE       1024
+// #define SENSOR_STACK_SIZE       1024
 #define SENSOR_THREAD_PRIORITY  6
 
 #define POLL_INTERVAL_MS        60      /* 16.67 Hz — matches your working blinky */
@@ -45,13 +72,44 @@ LOG_MODULE_REGISTER(lima_fsm, LOG_LEVEL_DBG);
 #define SLEEP_INACTIVITY_MS     30000   /* 30s no event → deep sleep               */
 #define MAX_FAULT_RETRIES       3
 
-#define MOTION_THRESHOLD_G      1.5     /* Tune for vehicle vs rack deployment     */
+#define MOTION_THRESHOLD_G      1.10     /* 1.1 table top     */
+
+#define FSM_STACK_SIZE    8192  // Double it again
+#define SENSOR_STACK_SIZE 4096  // Double it again
 
 /* ── Hardware globals ────────────────────────────────────────────────────── */
 
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 static const struct device *mpu;
 static struct sensor_value accel[3];
+static struct k_work_delayable cooldown_work;
+
+/* Non-blocking timer for cooldown */
+static struct k_work_delayable cooldown_work;
+
+/* Timer to blink LED in ARMED state */
+void heartbeat_expiry_fn(struct k_timer *timer_id);
+K_TIMER_DEFINE(heartbeat_timer, heartbeat_expiry_fn, NULL);
+
+void heartbeat_expiry_fn(struct k_timer *timer_id)
+{
+    static bool led_state = false;
+    led_state = !led_state;
+    gpio_pin_set_dt(&led, led_state);
+}
+
+/* ── Work Queue Callback ─────────────────────────────────────────────────── */
+/* This runs when the background timer expires  */
+static void cooldown_expiry_cb(struct k_work *work)
+{
+    lima_event_t e = {
+        .type         = LIMA_EVT_COOLDOWN_EXPIRED,
+        .timestamp_ms = k_uptime_get_32(),
+    };
+    
+    LOG_INF("COOLDOWN: timer expired, notifying FSM ");
+    lima_post_event(&e);
+}
 
 /* ── FSM states ──────────────────────────────────────────────────────────── */
 
@@ -114,19 +172,27 @@ static int hw_init_sensors(void)
 {
     /* MPU6050 */
     mpu = DEVICE_DT_GET_ANY(invensense_mpu6050);
+
+    if (mpu == NULL) {
+        LOG_ERR("MPU6050 device not found in devicetree!");
+        return -ENODEV;
+    }
+    
     if (!device_is_ready(mpu)) {
         LOG_ERR("MPU6050 not ready!");
         return -ENODEV;
     }
     LOG_INF("MPU6050 ready");
 
-    /* LED heartbeat */
-    if (!gpio_is_ready_dt(&led)) {
-        LOG_ERR("LED not ready!");
-        return -ENODEV;
-    }
-    gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
-    LOG_INF("LED ready");
+
+
+    // /* LED heartbeat */
+    // if (!gpio_is_ready_dt(&led)) {
+    //     LOG_ERR("LED not ready!");
+    //     return -ENODEV;
+    // }
+    // gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
+    // LOG_INF("LED ready");
 
     return 0;
 }
@@ -145,9 +211,23 @@ static double hw_read_imu(void)
     double ay = sensor_value_to_double(&accel[1]);
     double az = sensor_value_to_double(&accel[2]);
 
-    LOG_DBG("accel x:%.2f y:%.2f z:%.2f", ax, ay, az);
+     // Magnitude in m/s^2
+    double mag_ms2 = sqrt(ax*ax + ay*ay + az*az);
+    
+    double current_g = mag_ms2 / 9.80665;
 
-    return sqrt(ax*ax + ay*ay + az*az);
+    // Normalize: Subtract Earth's gravity (approx 9.806)
+    // and convert to Gs. This makes 'rest' approximately 0.0g.
+
+    // magnitue
+    // double mag_g = fabs((mag_ms2 / 9.80665) - 1.0);
+    // LOG_DBG("accel x:%.2f y:%.2f z:%.2f | G:%.2f", ax, ay, az, mag_g);
+    // return mag_g;
+
+    // g's
+    double motion_g = fabs(current_g - 1.0);
+    LOG_DBG("Raw: %.2f m/s2 | Motion: %.2f G", mag_ms2, motion_g);
+    return motion_g;
 }
 
 /* ── Remaining stubs (swap these in one at a time) ───────────────────────── */
@@ -226,13 +306,103 @@ static void hw_notify_low_battery(void)
     LOG_INF("[STUB] notify_low_battery");
 }
 
+/* ── led blink -------------─────────────────────────────────────────────── */
+
+static void led_blink(int times)
+{
+    for (int i = 0; i < times; i++) {
+        gpio_pin_set_dt(&led, 0);   // active low = on
+        k_msleep(100);
+        gpio_pin_set_dt(&led, 1);   // off
+        k_msleep(100);
+    }
+}
+
+static void hw_i2c_bus_recovery(void)
+{
+    LOG_INF("BOOT: Performing I2C bus recovery on P0.19/P0.20...");
+
+    /* Get the device pointer for GPIO Port 0 */
+    const struct device *gpio0_dev = DEVICE_DT_GET(DT_NODELABEL(gpio0));
+
+    if (!device_is_ready(gpio0_dev)) {
+        LOG_ERR("GPIO0 device not ready for recovery");
+        return;
+    }
+
+    /* Configure SCL as output, SDA as input */
+    gpio_pin_configure(gpio0_dev, I2C0_SCL_PIN, GPIO_OUTPUT_HIGH);
+    gpio_pin_configure(gpio0_dev, I2C0_SDA_PIN, GPIO_INPUT);
+
+    /* Clock out 9 pulses to release SDA */
+    for (int i = 0; i < 9; i++) {
+        gpio_pin_set_raw(gpio0_dev, I2C0_SCL_PIN, 1);
+        k_busy_wait(5);
+        gpio_pin_set_raw(gpio0_dev, I2C0_SCL_PIN, 0);
+        k_busy_wait(5);
+    }
+    
+    /* Leave SCL high (idle state) */
+    gpio_pin_set_raw(gpio0_dev, I2C0_SCL_PIN, 1);
+    
+    /* 💡 CRITICAL: We must "unconfigure" the pins so the I2C driver 
+       can take control of them again when it initializes later. */
+    gpio_pin_configure(gpio0_dev, I2C0_SCL_PIN, GPIO_DISCONNECTED);
+    gpio_pin_configure(gpio0_dev, I2C0_SDA_PIN, GPIO_DISCONNECTED);
+
+    LOG_INF("BOOT: I2C recovery complete");
+}
+
 /* ── State transition helper ─────────────────────────────────────────────── */
+
+// static void transition(lima_state_t next)
+// {
+//     LOG_INF("FSM: %s -> %s", state_name[fsm.current], state_name[next]);
+//     fsm.previous = fsm.current;
+//     fsm.current  = next;
+// }
 
 static void transition(lima_state_t next)
 {
     LOG_INF("FSM: %s -> %s", state_name[fsm.current], state_name[next]);
+
+    /* 1. EXIT ACTIONS: Clean up the old state before switching */
+    switch (fsm.current) {
+        case STATE_ARMED:
+            state_armed_exit(); // 💡 Stops the heartbeat timer
+            break;
+        case STATE_COOLDOWN:
+            /* If we leave cooldown early (e.g. Tamper), stop the work timer */
+            k_work_cancel_delayable(&cooldown_work);
+            break;
+        default:
+            break;
+    }
+
+    /* 2. STATE SWITCH */
     fsm.previous = fsm.current;
     fsm.current  = next;
+
+    /* 3. ENTRY ACTIONS: Initialize the new state */
+    switch (fsm.current) {
+        case STATE_BOOT:
+            state_boot_enter();
+            break;
+        case STATE_CALIBRATING:
+            state_calibrating_enter();
+            break;
+        case STATE_ARMED:
+            state_armed_enter(); // 💡 Starts the heartbeat timer
+            break;
+        case STATE_EVENT_DETECTED:
+            state_event_detected_enter();
+            break;
+        case STATE_COOLDOWN:
+            state_cooldown_enter();
+            break;
+        default:
+            break;
+    }
 }
 
 /* ── State handlers ──────────────────────────────────────────────────────── */
@@ -246,14 +416,20 @@ static void state_boot_enter(void)
 {
     LOG_INF("BOOT: initializing hardware");
 
+    k_work_init_delayable(&cooldown_work, cooldown_expiry_cb);
+
+    k_msleep(100);
+
     if (hw_init_sensors() != 0) {
         LOG_ERR("BOOT: hardware init failed -> FAULT");
         transition(STATE_FAULT);
         return;
     }
-
+    // led_blink(1);
     LOG_INF("BOOT: init complete -> CALIBRATING");
+    k_msleep(50);   // let USB flush the log
     transition(STATE_CALIBRATING);
+    LOG_INF("BOOT: transition called");  // ← does this print?
 }
 
 /*
@@ -263,6 +439,8 @@ static void state_boot_enter(void)
  */
 static void state_calibrating_enter(void)
 {
+    LOG_INF("CALIBRATING: enter function reached");  // ← add this
+    // led_blink(2);
     LOG_INF("CALIBRATING: warming up sensors");
 
     int rc = hw_calibrate();
@@ -274,6 +452,15 @@ static void state_calibrating_enter(void)
 
     LOG_INF("CALIBRATING: baseline ready -> ARMED");
     transition(STATE_ARMED);
+
+    // /* kick FSM thread to run ARMED entry */
+    // lima_event_t e = {
+    //     .type         = LIMA_EVT_POLL_TICK,
+    //     .timestamp_ms = k_uptime_get_32(),
+    // };
+    // lima_post_event(&e);
+    LOG_INF("CALIBRATING: kicked event");
+
 }
 
 /*
@@ -283,14 +470,25 @@ static void state_calibrating_enter(void)
  * Either sensor alone is sufficient to trigger EVENT_DETECTED.
  */
 static void state_armed_enter(void)
-{
-    LOG_INF("ARMED: sensors active, watching for events");
+{    
+    // led_blink(3);
+    LOG_INF("ARMED: Sensors active. Heartbeat started.");
+    /* Blink every 2 seconds (100ms on, then stays off until next cycle) */
+    k_timer_start(&heartbeat_timer, K_MSEC(2000), K_MSEC(2000));
+
     fsm.armed_since_ms = k_uptime_get_32();
     hw_enable_irqs();
 }
 
+static void state_armed_exit(void)
+{
+    k_timer_stop(&heartbeat_timer);
+    gpio_pin_set_dt(&led, 0); // Ensure LED is off when leaving ARMED
+}
+
 static void state_armed_handle(const lima_event_t *evt)
 {
+    // led_blink(3);
     switch (evt->type) {
     case LIMA_EVT_PRESSURE_BREACH:
     case LIMA_EVT_MOTION_DETECTED:
@@ -313,6 +511,9 @@ static void state_armed_handle(const lima_event_t *evt)
         fsm.fault_retries = 0;
         transition(STATE_FAULT);
         break;
+    case LIMA_EVT_INIT_COMPLETE:
+    /* Ignore - already initialized */
+    break;
 
     default:
         LOG_WRN("ARMED: unhandled event type=%d", evt->type);
@@ -510,10 +711,13 @@ static void state_transmitting_handle(const lima_event_t *evt)
  */
 static void state_cooldown_enter(void)
 {
-    uint32_t ms = fsm.cooldown_ms > 0 ? fsm.cooldown_ms : COOLDOWN_MS_DEFAULT;
+    uint32_t ms = fsm.cooldown_ms > 0 ? fsm.cooldown_ms : 5000;
     LOG_INF("COOLDOWN: suppressing events for %u ms", ms);
 
-    k_sleep(K_MSEC(ms));   /* TODO: make non-blocking with k_work_delayable */
+    k_work_reschedule(&cooldown_work, K_MSEC(ms));
+    
+    // k_sleep(K_MSEC(ms));   /* TODO: make non-blocking with k_work_delayable */
+
 
     lima_event_t e = {
         .type         = LIMA_EVT_COOLDOWN_EXPIRED,
@@ -526,14 +730,26 @@ static void state_cooldown_handle(const lima_event_t *evt)
 {
     switch (evt->type) {
     case LIMA_EVT_COOLDOWN_EXPIRED:
-        LOG_INF("COOLDOWN: expired -> ARMED");
+        LOG_INF("COOLDOWN: expired -> ARMED [cite: 60]");
         transition(STATE_ARMED);
         break;
 
     case LIMA_EVT_LOW_BATTERY:
-    case LIMA_EVT_CRITICAL_BATTERY:
-        transition(STATE_LOW_BATTERY);
-        break;
+    case LIMA_EVT_TAMPER_DETECTED:
+        /* 💡 ADDED: Immediate reaction to priority events  */
+        LOG_WRN("COOLDOWN: priority event detected! Aborting timer.");
+        k_work_cancel_delayable(&cooldown_work);
+        
+        if (evt->type == LIMA_EVT_TAMPER_DETECTED) {
+            fsm.last_event = *evt;
+            transition(STATE_EVENT_DETECTED);
+        } else {
+            transition(STATE_LOW_BATTERY);
+        }
+    //     break;
+    // case LIMA_EVT_CRITICAL_BATTERY:
+    //     transition(STATE_LOW_BATTERY);
+    //     break;
 
     default:
         /* Suppress sensor events during cooldown -- by design */
@@ -638,28 +854,36 @@ static void state_low_battery_handle(const lima_event_t *evt)
 
 static void fsm_dispatch(const lima_event_t *evt)
 {
-    static lima_state_t last_dispatched = (lima_state_t)-1;
+    while (1) {
 
-    /* Run _enter() the first time we land in a new state */
-    if (fsm.current != last_dispatched) {
-        last_dispatched = fsm.current;
-        switch (fsm.current) {
-        case STATE_BOOT:            state_boot_enter();            break;
-        case STATE_CALIBRATING:     state_calibrating_enter();     break;
-        case STATE_ARMED:           state_armed_enter();           break;
-        case STATE_LIGHT_SLEEP:     state_light_sleep_enter();     break;
-        case STATE_DEEP_SLEEP:      state_deep_sleep_enter();      break;
-        case STATE_EVENT_DETECTED:  state_event_detected_enter();  break;
-        case STATE_SIGNING:         state_signing_enter();         break;
-        case STATE_TRANSMITTING:    state_transmitting_enter();    break;
-        case STATE_COOLDOWN:        state_cooldown_enter();        break;
-        case STATE_FAULT:           state_fault_enter();           break;
-        case STATE_LOW_BATTERY:     state_low_battery_enter();     break;
+        static lima_state_t last_state = (lima_state_t)-1;
+
+        /* Run entry if state changed */
+        if (fsm.current != last_state) {
+            last_state = fsm.current;
+
+            switch (fsm.current) {
+            case STATE_BOOT:            state_boot_enter();            break;
+            case STATE_CALIBRATING:     state_calibrating_enter();     break;
+            case STATE_ARMED:           state_armed_enter();           break;
+            case STATE_LIGHT_SLEEP:     state_light_sleep_enter();     break;
+            case STATE_DEEP_SLEEP:      state_deep_sleep_enter();      break;
+            case STATE_EVENT_DETECTED:  state_event_detected_enter();  break;
+            case STATE_SIGNING:         state_signing_enter();         break;
+            case STATE_TRANSMITTING:    state_transmitting_enter();    break;
+            case STATE_COOLDOWN:        state_cooldown_enter();        break;
+            case STATE_FAULT:           state_fault_enter();           break;
+            case STATE_LOW_BATTERY:     state_low_battery_enter();     break;
+            }
+
+            /* If entry changed state again, loop and run new entry */
+            continue;
         }
-        return; /* let the entry action settle before handling next event */
+
+        break;  /* state stable */
     }
 
-    /* Route incoming events to the current state's handler */
+    /* Now route the incoming event */
     switch (fsm.current) {
     case STATE_ARMED:           state_armed_handle(evt);           break;
     case STATE_LIGHT_SLEEP:     state_light_sleep_handle(evt);     break;
@@ -670,7 +894,6 @@ static void fsm_dispatch(const lima_event_t *evt)
     case STATE_FAULT:           state_fault_handle(evt);           break;
     case STATE_LOW_BATTERY:     state_low_battery_handle(evt);     break;
     default:
-        /* BOOT / CALIBRATING / EVENT_DETECTED self-post their exit events */
         break;
     }
 }
@@ -679,6 +902,7 @@ static void fsm_dispatch(const lima_event_t *evt)
 
 static void sensor_thread_fn(void *p1, void *p2, void *p3)
 {
+    LOG_INF("FSM sensor thread resumed!");  // ← add this as very first line
     ARG_UNUSED(p1); ARG_UNUSED(p2); ARG_UNUSED(p3);
 
     LOG_INF("Sensor thread started");
@@ -713,14 +937,11 @@ static void sensor_thread_fn(void *p1, void *p2, void *p3)
     }
 }
 
-K_THREAD_DEFINE(sensor_thread, SENSOR_STACK_SIZE,
-                sensor_thread_fn, NULL, NULL, NULL,
-                SENSOR_THREAD_PRIORITY, 0, 0);
-
 /* ── FSM thread ──────────────────────────────────────────────────────────── */
 
 static void fsm_thread_fn(void *p1, void *p2, void *p3)
 {
+    LOG_INF("FSM thread resumed!");  // ← add this as very first line
     ARG_UNUSED(p1); ARG_UNUSED(p2); ARG_UNUSED(p3);
 
     LOG_INF("LIMA FSM thread started");
@@ -734,7 +955,8 @@ static void fsm_thread_fn(void *p1, void *p2, void *p3)
         .type         = LIMA_EVT_INIT_COMPLETE,
         .timestamp_ms = k_uptime_get_32(),
     };
-    fsm_dispatch(&boot_evt);
+    // fsm_dispatch(&boot_evt);
+    lima_post_event(&boot_evt);
 
     /* Main event loop — blocks on queue, wakes on each incoming event */
     lima_event_t evt;
@@ -750,16 +972,49 @@ static void fsm_thread_fn(void *p1, void *p2, void *p3)
     }
 }
 
+//  * Thread startup:
+//  *   Threads are defined with K_FOREVER (no auto-start).
+//  *   main() blinks LED to let USB settle, then calls:
+//  *       k_thread_start(fsm_thread);
+//  *       k_thread_start(sensor_thread);
+//  *   This prevents the USB suspend/reset cycle from
+//  *   interrupting FSM boot sequencing.
+
 K_THREAD_DEFINE(fsm_thread, FSM_STACK_SIZE,
                 fsm_thread_fn, NULL, NULL, NULL,
                 FSM_THREAD_PRIORITY, 0, 0);
+
+K_THREAD_DEFINE(sensor_thread, SENSOR_STACK_SIZE,
+                sensor_thread_fn, NULL, NULL, NULL,
+                SENSOR_THREAD_PRIORITY, 0, 0);
 
 /* ── main ────────────────────────────────────────────────────────────────── */
 
 int main(void)
 {
+    // suspend threads immediately before USB chaos starts
+    k_thread_suspend(fsm_thread);
+    k_thread_suspend(sensor_thread);
+
+    // 2. Clear the I2C bus manually before doing ANYTHING else
+    // This prevents a hung sensor from blocking the driver later
+    hw_i2c_bus_recovery();
+
+  
+    
     LOG_INF("L.I.M.A. node firmware starting");
-    LOG_INF("Board: nrf52840_mdk_usb_dongle -- NCS/Zephyr");
-    /* Both threads are auto-started by K_THREAD_DEFINE above */
+    
+    // 3. Increase the wait and ensure USB is stable
+    // We wait 6 seconds now to be absolutely sure the host has finished enumeration
+    for (int i = 0; i < 6; i++) {
+        led_blink(1);
+        k_msleep(1000);
+        LOG_INF("USB Settle Loop: %d/6", i+1);
+    }
+    
+    LOG_INF("Starting LIMA Threads...");
+    k_thread_resume(fsm_thread);
+    k_thread_resume(sensor_thread);
+
     return 0;
 }
