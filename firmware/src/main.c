@@ -72,7 +72,7 @@ static void state_cooldown_enter(void);
 #define SLEEP_INACTIVITY_MS     30000   /* 30s no event → deep sleep               */
 #define MAX_FAULT_RETRIES       3
 
-#define MOTION_THRESHOLD_G      1.10     /* 1.1 table top     */
+#define MOTION_THRESHOLD_G      1.09     /* 1.1 good for table top     */
 
 #define FSM_STACK_SIZE    8192  // Double it again
 #define SENSOR_STACK_SIZE 4096  // Double it again
