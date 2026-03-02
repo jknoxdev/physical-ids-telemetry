@@ -375,16 +375,23 @@ K_THREAD_DEFINE(sensor_thread, SENSOR_STACK_SIZE,
 
 int main(void)
 {
+    LOG_INF("L.I.M.A. node firmware starting");
+
     k_thread_suspend(fsm_thread);
     k_thread_suspend(sensor_thread);
-
-    hw_i2c_bus_recovery();
-
+    
     gpio_pin_configure_dt(&led_r, GPIO_OUTPUT_INACTIVE);
     gpio_pin_configure_dt(&led_g, GPIO_OUTPUT_INACTIVE);
     gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_INACTIVE);
 
-    LOG_INF("L.I.M.A. node firmware starting");
+    hw_i2c_bus_recovery();
+
+    if (hw_init_sensors() != 0) {
+        LOG_ERR("Sensor init failed!");
+        // post SENSOR_FAULT event or spin
+    }
+
+
 
     for (int i = 0; i < 6; i++) {
         k_msleep(1000);
