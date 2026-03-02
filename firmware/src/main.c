@@ -31,7 +31,7 @@
 #include "events.h"
 #include "fsm.h"
 
-LOG_MODULE_REGISTER(lima_main, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(lima_main);
 
 #define I2C0_SCL_PIN 19
 #define I2C0_SDA_PIN 20
@@ -376,6 +376,7 @@ K_THREAD_DEFINE(sensor_thread, SENSOR_STACK_SIZE,
 int main(void)
 {
     LOG_INF("L.I.M.A. node firmware starting");
+    LOG_INF("L.I.M.A.: suspending threads...");
 
     k_thread_suspend(fsm_thread);
     k_thread_suspend(sensor_thread);
