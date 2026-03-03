@@ -356,8 +356,7 @@ static void sensor_thread_fn(void *p1, void *p2, void *p3)
     k_sleep(K_MSEC(500));
 
     LOG_INF("Sensor thread: 500ms expired...");
-
-
+    
     while (1) {
         lima_state_t s = fsm_get_state();
         LOG_DBG("Sensor thread: gathering FSM state...");
@@ -432,9 +431,7 @@ int main(void)
         LOG_ERR("Sensor init failed!");
         // post SENSOR_FAULT event or spin
     }
-
-
-
+    
     for (int i = 0; i < 6; i++) {
         k_msleep(1000);
         LOG_INF("USB settle: %d/6", i + 1);

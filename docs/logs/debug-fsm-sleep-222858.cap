@@ -781,3 +781,43 @@
 [00:01:56.284,118] <inf> lima_main: MOTION: 2.46 g (threshold=0.80)
 [00:01:57.094,665] <inf> lima_main: MOTION: 1.54 g (threshold=0.80)
 [00:01:57.405,944] <inf> lima_main: MOTION: 1.48 g (threshold=0.80)
+[00:00:00.346,405] <inf> udc_nrf: Preinit
+*** Booting nRF Connect SDK v3.2.2-74845e169be2 ***
+*** Using Zephyr OS v4.2.99-fe4f0106803e ***
+[00:00:00.349,548] <inf> udc_nrf: Initialized
+[00:00:00.349,670] <inf> lima_main: L.I.M.A. node firmware starting
+[00:00:00.349,700] <inf> lima_main: L.I.M.A.: suspending threads...
+[00:00:00.349,731] <inf> lima_main: BOOT: I2C bus recovery on P0.19/P0.20
+[00:00:00.350,189] <inf> lima_main: BOOT: I2C recovery complete
+[00:00:00.350,189] <inf> lima_main: MPU6050 ready
+[00:00:00.353,759] <inf> udc_nrf: SUSPEND state detected
+[00:00:00.473,724] <inf> udc_nrf: Reset
+[00:00:00.473,754] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.473,815] <inf> udc_nrf: RESUMING from suspend
+[00:00:00.733,428] <inf> udc_nrf: Reset
+[00:00:00.733,489] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.820,068] <inf> udc_nrf: SUSPEND state detected
+[00:00:00.863,891] <inf> udc_nrf: Reset
+[00:00:00.863,952] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.863,983] <inf> udc_nrf: RESUMING from suspend
+[00:00:00.936,950] <inf> udc_nrf: Reset
+[00:00:00.937,011] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:01.021,301] <inf> udc: Sequence 2 not completed
+[00:00:01.021,636] <inf> udc: Sequence 2 not completed
+[00:00:01.021,942] <inf> udc: Sequence 2 not completed
+[00:00:01.350,463] <inf> lima_main: USB settle: 1/6
+[00:00:02.350,738] <inf> lima_main: USB settle: 2/6
+[00:00:03.350,921] <inf> lima_main: USB settle: 3/6
+[00:00:04.351,074] <inf> lima_main: USB settle: 4/6
+[00:00:05.351,135] <inf> lima_main: USB settle: 5/6
+[00:00:06.351,348] <inf> lima_main: USB settle: 6/6
+[00:00:06.351,348] <inf> lima_main: Starting LIMA threads...
+[00:00:06.351,562] <inf> lima_main: FSM thread started
+[00:00:06.351,593] <inf> lima_fsm: FSM: Initializing work items
+[00:00:06.351,715] <inf> lima_fsm: BOOT: entered
+[00:00:06.351,745] <inf> lima_fsm: FSM: Initialized in BOOT
+[00:00:06.351,959] <inf> lima_fsm: FSM: BOOT -> CALIBRATING
+[00:00:06.352,081] <inf> lima_fsm: CALIBRATING: warming up sensors
+[00:00:06.352,203] <inf> lima_fsm: FSM: CALIBRATING -> ARMED
+[00:00:06.352,325] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:06.352,447] <inf> lima_main: Sensor thread started... sleeping 500ms for FSM boot & calibration...

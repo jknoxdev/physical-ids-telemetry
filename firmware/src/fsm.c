@@ -25,6 +25,7 @@ static lima_state_t current_state = STATE_BOOT;
 static struct k_work_delayable cooldown_work;
 static struct k_work_delayable tx_timeout_work;
 static struct k_work_delayable armed_dwell_work;
+static struct k_work_delayable inactivity_work;
 
 /* ── Forward Declarations ────────────────────────────────────────────────── */
 
@@ -34,6 +35,7 @@ static void transition(lima_state_t next);
 static void cooldown_expiry_cb(struct k_work *work);
 static void tx_timeout_cb(struct k_work *work);
 static void armed_dwell_expiry_cb(struct k_work *work);
+static void inactivity_expiry_cb(struct k_work *work);
 
 /* State entry functions */
 static void state_boot_enter(void);
@@ -166,6 +168,17 @@ static void armed_dwell_expiry_cb(struct k_work *work)
     lima_post_event(&e);
 }
 
+static void inactivity_expiry_cb(struct k_work *work)
+{
+    ARG_UNUSED(work);
+    lima_event_t e = {
+        .type         = LIMA_EVT_INACTIVITY_TIMEOUT,
+        .timestamp_ms = k_uptime_get_32(),
+    };
+    LOG_INF("INACTIVITY: 30s window reached -> Deep Sleep");
+    lima_post_event(&e);
+}
+
 /* ── State: BOOT ─────────────────────────────────────────────────────────── */
 
 static void state_boot_enter(void)
@@ -201,10 +214,19 @@ static void state_armed_enter(void)
 {
     LOG_INF("ARMED: sensors active, heartbeat started");
     fsm.armed_since_ms = k_uptime_get_32();
+
     /* Start dwell timer — POLL_TICKs are ignored until this fires */
     k_work_reschedule(&armed_dwell_work, K_MSEC(ARMED_DWELL_MS));
     /* LED heartbeat is started by fsm_hw_set_led(STATE_ARMED) in main.c */
     
+    /* FIX: Only start the inactivity timer if it's not already counting.
+       This prevents the 22s loop from resetting the 30s clock. */
+    if (!k_work_delayable_is_pending(&inactivity_work)) {
+        k_work_reschedule(&inactivity_work, K_MSEC(SLEEP_INACTIVITY_MS));
+    }
+
+    /* 2. Reset the dwell timer */
+    k_work_reschedule(&armed_dwell_work, K_MSEC(ARMED_DWELL_MS));
 }
 
 static void state_armed_exit(void)
@@ -222,8 +244,13 @@ static void state_armed_handle(const lima_event_t *evt)
         case LIMA_EVT_MOTION_DETECTED:
         case LIMA_EVT_DUAL_BREACH:
         case LIMA_EVT_TAMPER_DETECTED:
+            k_work_reschedule(&inactivity_work, K_MSEC(SLEEP_INACTIVITY_MS));
             fsm.last_event = *evt;
             transition(STATE_EVENT_DETECTED);
+            break;
+
+        case LIMA_EVT_INACTIVITY_TIMEOUT:
+            transition(STATE_DEEP_SLEEP);
             break;
 
         case LIMA_EVT_ARMED_TIMEOUT:
@@ -283,7 +310,8 @@ static void state_light_sleep_handle(const lima_event_t *evt)
         }
         break;
 
-    case LIMA_EVT_SLEEP_TIMER_EXPIRY:
+    case LIMA_EVT_INACTIVITY_TIMEOUT:
+        /* The 30s timer expired while we were in Light Sleep */
         transition(STATE_DEEP_SLEEP);
         break;
 
@@ -541,7 +569,8 @@ void fsm_init(void)
     k_work_init_delayable(&cooldown_work, cooldown_expiry_cb);
     k_work_init_delayable(&tx_timeout_work, tx_timeout_cb);
     k_work_init_delayable(&armed_dwell_work, armed_dwell_expiry_cb);
-    
+    k_work_init_delayable(&inactivity_work, inactivity_expiry_cb);
+
     current_state = STATE_BOOT;
     fsm_hw_set_led(STATE_BOOT);
     state_boot_enter(); 
