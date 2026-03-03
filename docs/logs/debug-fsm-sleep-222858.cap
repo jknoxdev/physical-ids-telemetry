@@ -677,3 +677,107 @@
 [00:00:46.087,005] <inf> lima_main: Sensor thread: gathering FSM state...
 [00:00:46.149,597] <inf> lima_main: Sensor thread: gathering FSM state...
 [00:00:46.211,914] <inf> lima_main: Sensor thread: gathering FSM state...
+[00:00:00.342,803] <inf> udc_nrf: Preinit
+*** Booting nRF Connect SDK v3.2.2-74845e169be2 ***
+*** Using Zephyr OS v4.2.99-fe4f0106803e ***
+[00:00:00.346,405] <inf> udc_nrf: Initialized
+[00:00:00.346,740] <inf> lima_main: L.I.M.A. node firmware starting
+[00:00:00.346,740] <inf> lima_main: L.I.M.A.: suspending threads...
+[00:00:00.346,893] <inf> lima_main: BOOT: I2C bus recovery on P0.19/P0.20
+[00:00:00.347,503] <inf> lima_main: BOOT: I2C recovery complete
+[00:00:00.347,503] <inf> lima_main: MPU6050 ready
+[00:00:00.350,677] <inf> udc_nrf: SUSPEND state detected
+[00:00:00.472,961] <inf> udc_nrf: Reset
+[00:00:00.473,022] <inf> udc_nrf: RESUMING from suspend
+[00:00:00.473,052] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.733,459] <inf> udc_nrf: Reset
+[00:00:00.733,489] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.820,251] <inf> udc_nrf: SUSPEND state detected
+[00:00:00.846,832] <inf> udc_nrf: Reset
+[00:00:00.846,893] <inf> udc_nrf: RESUMING from suspend
+[00:00:00.846,923] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.920,349] <inf> udc_nrf: Reset
+[00:00:00.920,410] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:01.004,791] <inf> udc: Sequence 2 not completed
+[00:00:01.005,218] <inf> udc: Sequence 2 not completed
+[00:00:01.005,554] <inf> udc: Sequence 2 not completed
+[00:00:01.347,686] <inf> lima_main: USB settle: 1/6
+[00:00:02.347,808] <inf> lima_main: USB settle: 2/6
+[00:00:03.348,052] <inf> lima_main: USB settle: 3/6
+[00:00:04.348,144] <inf> lima_main: USB settle: 4/6
+[00:00:05.348,388] <inf> lima_main: USB settle: 5/6
+[00:00:06.348,632] <inf> lima_main: USB settle: 6/6
+[00:00:06.348,724] <inf> lima_main: Starting LIMA threads...
+[00:00:06.348,846] <inf> lima_main: FSM thread started
+[00:00:06.348,876] <inf> lima_fsm: FSM: Initializing work items
+[00:00:06.348,999] <inf> lima_fsm: BOOT: entered
+[00:00:06.349,029] <inf> lima_fsm: FSM: Initialized in BOOT
+[00:00:06.349,243] <inf> lima_fsm: FSM: BOOT -> CALIBRATING
+[00:00:06.349,243] <inf> lima_fsm: CALIBRATING: warming up sensors
+[00:00:06.349,487] <inf> lima_fsm: FSM: CALIBRATING -> ARMED
+[00:00:06.349,487] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:06.349,731] <inf> lima_main: Sensor thread started... sleeping 500ms for FSM boot & calibration...
+[00:00:06.850,006] <inf> lima_main: Sensor thread: 500ms expired...
+[00:00:06.852,416] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:00:06.852,416] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:00:16.852,600] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:00:17.453,430] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:00:17.453,430] <inf> lima_main: [SLEEP] entering light sleep â€” heartbeat interval 10000 ms
+[00:00:27.453,582] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:00:27.453,704] <inf> lima_fsm: FSM: LIGHT_SLEEP -> ARMED
+[00:00:27.453,704] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:27.453,826] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:00:27.453,826] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:00:37.454,010] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:00:38.054,870] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:00:38.054,901] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:00:48.055,023] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:00:48.055,145] <inf> lima_fsm: FSM: LIGHT_SLEEP -> ARMED
+[00:00:48.055,175] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:48.055,267] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:00:48.055,267] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:00:58.055,480] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:00:58.161,590] <inf> lima_main: MOTION: 1.62 g (threshold=0.80)
+[00:00:58.656,402] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:00:58.656,494] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:01:08.656,555] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:01:08.656,677] <inf> lima_fsm: FSM: LIGHT_SLEEP -> ARMED
+[00:01:08.656,707] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:01:08.656,799] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:01:08.656,799] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:01:09.035,552] <inf> lima_main: MOTION: 2.46 g (threshold=0.80)
+[00:01:09.097,991] <inf> lima_main: MOTION: 2.41 g (threshold=0.80)
+[00:01:09.160,522] <inf> lima_main: MOTION: 1.85 g (threshold=0.80)
+[00:01:18.657,012] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:01:19.257,995] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:01:19.258,026] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:01:23.138,946] <inf> lima_main: MOTION: 2.46 g (threshold=0.80)
+[00:01:23.201,477] <inf> lima_main: MOTION: 2.09 g (threshold=0.80)
+[00:01:26.638,977] <inf> lima_main: MOTION: 2.46 g (threshold=0.80)
+[00:01:28.388,519] <inf> lima_main: MOTION: 2.46 g (threshold=0.80)
+[00:01:28.451,171] <inf> lima_main: MOTION: 1.70 g (threshold=0.80)
+[00:01:29.258,148] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:01:29.258,270] <inf> lima_fsm: FSM: LIGHT_SLEEP -> ARMED
+[00:01:29.258,300] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:01:29.258,392] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:01:29.258,422] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:01:39.258,544] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:01:39.859,222] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:01:39.859,252] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:01:40.925,506] <inf> lima_main: MOTION: 1.86 g (threshold=0.80)
+[00:01:42.924,987] <inf> lima_main: MOTION: 2.46 g (threshold=0.80)
+[00:01:42.987,396] <inf> lima_main: MOTION: 1.02 g (threshold=0.80)
+[00:01:44.487,091] <inf> lima_main: MOTION: 1.58 g (threshold=0.80)
+[00:01:44.549,621] <inf> lima_main: MOTION: 1.82 g (threshold=0.80)
+[00:01:45.924,194] <inf> lima_main: MOTION: 2.23 g (threshold=0.80)
+[00:01:47.360,900] <inf> lima_main: MOTION: 2.44 g (threshold=0.80)
+[00:01:48.799,133] <inf> lima_main: MOTION: 1.95 g (threshold=0.80)
+[00:01:49.859,405] <inf> lima_main: [SLEEP] light sleep expired â waking
+[00:01:49.859,527] <inf> lima_fsm: FSM: LIGHT_SLEEP -> ARMED
+[00:01:49.859,649] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:01:49.859,771] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:01:49.859,863] <inf> lima_main: [SLEEP] entering light sleep â heartbeat interval 10000 ms
+[00:01:55.847,625] <inf> lima_main: MOTION: 1.45 g (threshold=0.80)
+[00:01:56.284,118] <inf> lima_main: MOTION: 2.46 g (threshold=0.80)
+[00:01:57.094,665] <inf> lima_main: MOTION: 1.54 g (threshold=0.80)
+[00:01:57.405,944] <inf> lima_main: MOTION: 1.48 g (threshold=0.80)

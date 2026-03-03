@@ -21,9 +21,10 @@ lima_fsm_ctx_t fsm = {
 /* ── Internal State (Private to this file) ──────────────────────────────── */
 static lima_state_t current_state = STATE_BOOT;
 
-/* timeouts and their (handlers */
+/* timeouts and their handlers */
 static struct k_work_delayable cooldown_work;
 static struct k_work_delayable tx_timeout_work;
+static struct k_work_delayable armed_dwell_work;
 
 /* ── Forward Declarations ────────────────────────────────────────────────── */
 
@@ -32,6 +33,7 @@ static void transition(lima_state_t next);
 /* Work/timer callbacks */
 static void cooldown_expiry_cb(struct k_work *work);
 static void tx_timeout_cb(struct k_work *work);
+static void armed_dwell_expiry_cb(struct k_work *work);
 
 /* State entry functions */
 static void state_boot_enter(void);
@@ -153,6 +155,17 @@ static void tx_timeout_cb(struct k_work *work)
     lima_post_event(&e);
 }
 
+static void armed_dwell_expiry_cb(struct k_work *work)
+{
+    ARG_UNUSED(work);
+    lima_event_t e = {
+        .type         = LIMA_EVT_ARMED_TIMEOUT,
+        .timestamp_ms = k_uptime_get_32(),
+    };
+    LOG_INF("ARMED: dwell timer expired -> sleep eligible");
+    lima_post_event(&e);
+}
+
 /* ── State: BOOT ─────────────────────────────────────────────────────────── */
 
 static void state_boot_enter(void)
@@ -188,15 +201,18 @@ static void state_armed_enter(void)
 {
     LOG_INF("ARMED: sensors active, heartbeat started");
     fsm.armed_since_ms = k_uptime_get_32();
+    /* Start dwell timer — POLL_TICKs are ignored until this fires */
+    k_work_reschedule(&armed_dwell_work, K_MSEC(ARMED_DWELL_MS));
     /* LED heartbeat is started by fsm_hw_set_led(STATE_ARMED) in main.c */
+    
 }
 
 static void state_armed_exit(void)
 {
-    LOG_DBG("ARMED: exit — heartbeat stopped");
-    /* Heartbeat stop is handled by fsm_hw_set_led() for the next state,
-       but we call into main.c's hook explicitly to be safe. */
-    fsm_hw_enter_sleep(); /* no-op unless overridden */
+    LOG_DBG("ARMED: exit — cancelling dwell timer");
+    k_work_cancel_delayable(&armed_dwell_work);
+    /* NOTE: do NOT call fsm_hw_enter_sleep() here — sleep is entered
+     * via state_light_sleep_enter() only, not on every ARMED exit. */
 }
 
 static void state_armed_handle(const lima_event_t *evt) 
@@ -210,8 +226,15 @@ static void state_armed_handle(const lima_event_t *evt)
             transition(STATE_EVENT_DETECTED);
             break;
 
-        case LIMA_EVT_POLL_TICK:
+        case LIMA_EVT_ARMED_TIMEOUT:
+            /* Dwell period complete — safe to enter light sleep */
+            LOG_INF("ARMED: dwell complete -> LIGHT_SLEEP");
             transition(STATE_LIGHT_SLEEP);
+            break;
+
+        case LIMA_EVT_POLL_TICK:
+            /* Heartbeat tick during dwell — stay ARMED, nothing to do */
+            LOG_DBG("ARMED: tick (dwell active)");
             break;
 
         case LIMA_EVT_LOW_BATTERY:

@@ -44,6 +44,7 @@ typedef enum {
     LIMA_EVT_SLEEP_TIMER_EXPIRY = 0x15,  /* Inactivity -> deep sleep            */
     LIMA_EVT_COOLDOWN_EXPIRED   = 0x16,  /* Cooldown timer done -> rearm        */
     LIMA_EVT_TIMEOUT            = 0x17,  /* General purpose FSM timeout         */
+    LIMA_EVT_ARMED_TIMEOUT      = 0x18   /* ARMED dwell expired → OK to sleep   */
 
     /* ── BLE Broker & Signing (0x20 - 0x2F) ──────────────────────────────── */
     LIMA_EVT_SIGNING_COMPLETE   = 0x20,  /* Payload signed and ready            */
