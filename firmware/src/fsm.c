@@ -540,7 +540,8 @@ void fsm_init(void)
 
     k_work_init_delayable(&cooldown_work, cooldown_expiry_cb);
     k_work_init_delayable(&tx_timeout_work, tx_timeout_cb);
-
+    k_work_init_delayable(&armed_dwell_work, armed_dwell_expiry_cb);
+    
     current_state = STATE_BOOT;
     fsm_hw_set_led(STATE_BOOT);
     state_boot_enter(); 
