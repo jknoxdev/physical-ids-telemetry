@@ -5,6 +5,7 @@
     mpu6050@68 {
         compatible = "invensense,mpu6050";
         reg = <0x68>;
+        int-gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
     };
 };
 
@@ -51,10 +52,19 @@
             gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
         };
     };
+    
+    keys {
+        compatible = "gpio-keys";
+        mpu_int: mpu_int {
+            gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+            label = "MPU6050 INT";
+        };
+    };
 
     aliases {
         led0 = &led_red;
         led1 = &led_green;
         led2 = &led_blue;
+        mpu-int = &mpu_int;    // ← add this
     };
 };
