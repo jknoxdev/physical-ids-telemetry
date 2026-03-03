@@ -27,3 +27,8 @@ screen /dev/ttyACM0
 ```bash
 find . -name "*.overlay" 2>/dev/null
 ```
+
+## run logger
+```bash
+minicom -D /dev/ttyACM0 -C debug-fsm-sleep-$(date +%H%M%S).cap
+```
