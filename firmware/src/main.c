@@ -326,7 +326,7 @@ void fsm_hw_set_led(lima_state_t state)
             k_msleep(100);
         }
         break;
-        
+
     case STATE_DEEP_SLEEP:
         /* 4 quick purple blinks */
         for (int i = 0; i < 4; i++) {
@@ -374,9 +374,15 @@ static void sensor_thread_fn(void *p1, void *p2, void *p3)
                     .data.imu.gyro_dps = 0.0f,
                 };
                 lima_post_event(&e);
+            } else {
+                // post POLL_TICK so FSM inactivity timer can run
+                lima_event_t tick = {
+                    .type         = LIMA_EVT_POLL_TICK,
+                    .timestamp_ms = k_uptime_get_32(),
+                };
+                lima_post_event(&tick);
             }
         }
-
         k_msleep(POLL_INTERVAL_MS);
     }
 }
