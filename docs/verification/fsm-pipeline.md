@@ -13,7 +13,7 @@
 
 - MPU6050 motion at 2.46G (threshold 0.80G)
 - Full ARMED -> EVENT_DETECTED -> SIGNING -> TRANSMITTING -> COOLDOWN
-- End-to-end in ~336 microseconds
+- End-to-end in ~366 microseconds
 
 ![alt text](image-1.png)
 
