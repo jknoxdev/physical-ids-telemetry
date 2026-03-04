@@ -26,7 +26,7 @@ LIMA nodes are small, battery-powered sensors that detect physical integrity eve
 The system is designed to be **air-gapped first**. No cloud dependency for core operation. No persistent BLE connections. No trusted local network required. Just a node, a gateway, and a signed audit trail that survives internet outages.
 
 ## System Overview
-
+![overview](docs/architecture/overview.png)
 
 **Two independent threat models, one pipeline:**
 
