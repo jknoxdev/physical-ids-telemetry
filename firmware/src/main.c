@@ -64,6 +64,11 @@ static const struct gpio_dt_spec led_b = GPIO_DT_SPEC_GET(LED_B_NODE, gpios);
 static const struct device *mpu;
 static struct sensor_value accel[3];
 
+/* Sleep LED state */
+static struct k_work_delayable sleep_led_work;
+static uint8_t sleep_led_on = 0;
+static uint32_t sleep_led_interval_ms = 0;
+
 /* ── Message queue ───────────────────────────────────────────────────────── */
 
 K_MSGQ_DEFINE(fsm_msgq, sizeof(lima_event_t), FSM_MSGQ_DEPTH, 4);
@@ -99,6 +104,20 @@ static void heartbeat_expiry_fn(struct k_timer *timer_id)
     bool led_on = (tick == 0 || tick == 2);
     gpio_pin_set_dt(&led_b, led_on ? 1 : 0);
     tick = (tick + 1) % 20;
+}
+
+/* ── Sleep LED timer ─────────────────────────────────────────────────────── */
+
+static void sleep_led_expiry_fn(struct k_work *work)
+{
+    sleep_led_on = !sleep_led_on;
+    gpio_pin_set_dt(&led_r, sleep_led_on ? 1 : 0);
+    gpio_pin_set_dt(&led_b, sleep_led_on ? 1 : 0);
+
+    /* Reschedule only if interval is still set */
+    if (sleep_led_interval_ms > 0) {
+        k_work_reschedule(&sleep_led_work, K_MSEC(sleep_led_interval_ms));
+    }
 }
 
 /* ── Hardware Abstraction Layer ──────────────────────────────────────────── */
@@ -268,7 +287,9 @@ void fsm_hw_set_led(lima_state_t state)
 {
     /* Stop the heartbeat before changing LEDs; restart it only for ARMED */
     k_timer_stop(&heartbeat_timer);
-
+    k_work_cancel_delayable(&sleep_led_work);
+    sleep_led_interval_ms = 0;
+    
     gpio_pin_set_dt(&led_r, 0);
     gpio_pin_set_dt(&led_g, 0);
     gpio_pin_set_dt(&led_b, 0);
@@ -312,27 +333,13 @@ void fsm_hw_set_led(lima_state_t state)
         break;
 
     case STATE_LIGHT_SLEEP:
-        /* 3 quick purple blinks */
-        for (int i = 0; i < 3; i++) {
-            gpio_pin_set_dt(&led_r, 1);
-            gpio_pin_set_dt(&led_b, 1);
-            k_msleep(100);
-            gpio_pin_set_dt(&led_r, 0);
-            gpio_pin_set_dt(&led_b, 0);
-            k_msleep(100);
-        }
+        sleep_led_interval_ms = 2000;
+        k_work_reschedule(&sleep_led_work, K_MSEC(sleep_led_interval_ms));
         break;
 
     case STATE_DEEP_SLEEP:
-        /* 4 quick purple blinks */
-        for (int i = 0; i < 4; i++) {
-            gpio_pin_set_dt(&led_r, 1);
-            gpio_pin_set_dt(&led_b, 1);
-            k_msleep(100);
-            gpio_pin_set_dt(&led_r, 0);
-            gpio_pin_set_dt(&led_b, 0);
-            k_msleep(100);
-        }
+        sleep_led_interval_ms = 4000;
+        k_work_reschedule(&sleep_led_work, K_MSEC(sleep_led_interval_ms));
         break;
 
     default:
@@ -433,6 +440,8 @@ int main(void)
         LOG_INF("USB settle: %d/6", i + 1);
     }
 
+    k_work_init_delayable(&sleep_led_work, sleep_led_expiry_fn);
+    
     LOG_INF("Starting LIMA threads...");
     k_thread_resume(fsm_thread);
     k_thread_resume(sensor_thread);
