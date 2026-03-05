@@ -172,7 +172,12 @@ static int hw_init_sensors(void)
 
 static double hw_read_imu(void)
 {
-    sensor_sample_fetch(mpu);
+    int ret = sensor_sample_fetch(mpu);
+    if (ret < 0) {
+        LOG_WRN("MPU6050: fetch failed (%d)", ret);
+        return -1.0;
+    }
+    
     sensor_channel_get(mpu, SENSOR_CHAN_ACCEL_XYZ, accel);
 
     double ax = sensor_value_to_double(&accel[0]);
