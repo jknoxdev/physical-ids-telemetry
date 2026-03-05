@@ -437,6 +437,8 @@ static void sensor_thread_fn(void *p1, void *p2, void *p3)
                 lima_post_event(&tick);
             }
             float delta_pa = hw_read_baro();
+             //LOG_INF("BARO: delta=%.2f Pa (threshold=%d)", (double)delta_pa, CONFIG_LIMA_BARO_THRESHOLD_PA);
+               
             if (fabsf(delta_pa) > CONFIG_LIMA_BARO_THRESHOLD_PA) {
                 LOG_INF("BARO: delta=%.2f Pa (threshold=%d)", (double)delta_pa, CONFIG_LIMA_BARO_THRESHOLD_PA);
                 lima_event_t e = {
