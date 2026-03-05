@@ -32,8 +32,6 @@ typedef enum {
     LIMA_EVT_LOW_BATTERY        = 0x08,  /* Vbat < low threshold                */
     LIMA_EVT_CRITICAL_BATTERY   = 0x09,  /* Vbat < critical threshold -> shutdown*/
     LIMA_EVT_BATTERY_RESTORED   = 0x0A,  /* Vbat recovered                      */
-    LIMA_EVT_INIT_COMPLETED     = 0x0B,  /* Node init completed                 */
-
 
     /* ── Lifecycle & Timing (0x10 - 0x1F) ────────────────────────────────── */
     LIMA_EVT_INIT_COMPLETE      = 0x10,  /* Boot init done, watchdog armed      */
