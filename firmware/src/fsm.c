@@ -215,11 +215,7 @@ static void state_armed_enter(void)
     LOG_INF("ARMED: sensors active, heartbeat started");
     fsm.armed_since_ms = k_uptime_get_32();
 
-    /* FIX: Only start the inactivity timer if it's not already counting.
-       This prevents the 22s loop from resetting the 30s clock. */
-    if (!k_work_delayable_is_pending(&inactivity_work)) {
-        k_work_reschedule(&inactivity_work, K_MSEC(SLEEP_INACTIVITY_MS));
-    }
+    k_work_reschedule(&inactivity_work, K_MSEC(SLEEP_INACTIVITY_MS));
 
     /* 2. Reset the dwell timer */
     k_work_reschedule(&armed_dwell_work, K_MSEC(ARMED_DWELL_MS));

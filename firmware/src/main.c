@@ -415,44 +415,47 @@ static void sensor_thread_fn(void *p1, void *p2, void *p3)
     LOG_INF("Sensor thread: 500ms expired...");
     
     while (1) {
-        lima_state_t s = fsm_get_state();
-        LOG_DBG("Sensor thread: gathering FSM state...");
-        if (s == STATE_ARMED || s == STATE_LIGHT_SLEEP) {
-            double magnitude = hw_read_imu();
-            if (magnitude > MOTION_THRESHOLD_G) {
-                LOG_INF("MOTION: %.2f g (threshold=%.2f)", magnitude, MOTION_THRESHOLD_G);
-                lima_event_t e = {
-                    .type              = LIMA_EVT_MOTION_DETECTED,
-                    .timestamp_ms      = k_uptime_get_32(),
-                    .data.imu.accel_g  = (float)magnitude,
-                    .data.imu.gyro_dps = 0.0f,
-                };
-                lima_post_event(&e);
-            } else {
-                // post POLL_TICK so FSM inactivity timer can run
-                lima_event_t tick = {
-                    .type         = LIMA_EVT_POLL_TICK,
-                    .timestamp_ms = k_uptime_get_32(),
-                };
-                lima_post_event(&tick);
-            }
-            float delta_pa = hw_read_baro();
-             //LOG_INF("BARO: delta=%.2f Pa (threshold=%d)", (double)delta_pa, CONFIG_LIMA_BARO_THRESHOLD_PA);
-               
-            if (fabsf(delta_pa) > CONFIG_LIMA_BARO_THRESHOLD_PA) {
-                LOG_INF("BARO: delta=%.2f Pa (threshold=%d)", (double)delta_pa, CONFIG_LIMA_BARO_THRESHOLD_PA);
-                lima_event_t e = {
-                    .type                = LIMA_EVT_PRESSURE_BREACH,
-                    .timestamp_ms        = k_uptime_get_32(),
-                    .data.baro.delta_pa  = delta_pa,
-                    .data.baro.abs_hpa   = baro_baseline_hpa + (delta_pa / 100.0f),
-                };
-                lima_post_event(&e);
-            }
+    lima_state_t s = fsm_get_state();
+    if (s == STATE_ARMED || s == STATE_LIGHT_SLEEP) {
+        bool event_fired = false;
+
+        double magnitude = hw_read_imu();
+        if (magnitude >= 0.0 && magnitude > MOTION_THRESHOLD_G) {
+            LOG_INF("MOTION: %.2f g (threshold=%.2f)", magnitude, MOTION_THRESHOLD_G);
+            lima_event_t e = {
+                .type             = LIMA_EVT_MOTION_DETECTED,
+                .timestamp_ms     = k_uptime_get_32(),
+                .data.imu.accel_g = (float)magnitude,
+            };
+            lima_post_event(&e);
+            event_fired = true;
         }
-        k_msleep(POLL_INTERVAL_MS);
+
+        float delta_pa = hw_read_baro();
+        if (fabsf(delta_pa) > CONFIG_LIMA_BARO_THRESHOLD_PA) {
+            LOG_INF("BARO: delta=%.2f Pa (threshold=%d)", (double)delta_pa, CONFIG_LIMA_BARO_THRESHOLD_PA);
+            lima_event_t e = {
+                .type               = LIMA_EVT_PRESSURE_BREACH,
+                .timestamp_ms       = k_uptime_get_32(),
+                .data.baro.delta_pa = delta_pa,
+            };
+            lima_post_event(&e);
+            event_fired = true;
+        }
+
+        if (!event_fired) {
+            lima_event_t tick = {
+                .type         = LIMA_EVT_POLL_TICK,
+                .timestamp_ms = k_uptime_get_32(),
+            };
+            lima_post_event(&tick);
+        }
     }
+    k_msleep(POLL_INTERVAL_MS);
 }
+}
+
+
 
 /* ── FSM thread ──────────────────────────────────────────────────────────── */
 
