@@ -223,10 +223,9 @@ static void state_armed_enter(void)
 
 static void state_armed_exit(void)
 {
-    LOG_DBG("ARMED: exit — cancelling dwell timer");
+    LOG_DBG("ARMED: exit — cancelling dwell and inactivity timers");
     k_work_cancel_delayable(&armed_dwell_work);
-    /* NOTE: do NOT call fsm_hw_enter_sleep() here — sleep is entered
-     * via state_light_sleep_enter() only, not on every ARMED exit. */
+    k_work_cancel_delayable(&inactivity_work);
 }
 
 static void state_armed_handle(const lima_event_t *evt) 
