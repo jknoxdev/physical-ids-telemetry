@@ -41,7 +41,7 @@ static psa_key_id_t signing_key_id = PSA_KEY_ID_NULL;
  *
  * @return PSA_SUCCESS on success, PSA error code on failure.
  */
-static psa_status_t provision_key(void)
+static psa_status_t provision_key(psa_key_id_t *out_key_id)
 {
     psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
 
@@ -56,8 +56,9 @@ static psa_status_t provision_key(void)
     psa_set_key_usage_flags(&attr,
         PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT);
 
-    psa_key_id_t key_id;
-    psa_status_t status = psa_generate_key(&attr, &key_id);
+    // psa_key_id_t key_id;
+    // psa_status_t status = psa_generate_key(&attr, &key_id);
+    psa_status_t status = psa_generate_key(&attr, out_key_id);
 
     psa_reset_key_attributes(&attr);
 
@@ -66,8 +67,10 @@ static psa_status_t provision_key(void)
         return status;
     }
 
-    LOG_INF("CRYPTO: P-256 keypair generated and stored in KMU slot 0x%08X",
-            CONFIG_LIMA_CRYPTO_KEY_ID);
+    // LOG_INF("CRYPTO: P-256 keypair generated and stored in KMU slot 0x%08X",
+    //         CONFIG_LIMA_CRYPTO_KEY_ID);
+    LOG_INF("CRYPTO: P-256 keypair generated (volatile, id=0x%08X)", *out_key_id);
+  
     return PSA_SUCCESS;
 }
 
@@ -118,7 +121,7 @@ int lima_crypto_init(void)
         /* No key yet — generate one (dev/first boot) */
         LOG_INF("CRYPTO: no key at slot 0x%08X — provisioning",
                 CONFIG_LIMA_CRYPTO_KEY_ID);
-        status = provision_key();
+        status = provision_key(&signing_key_id);
         if (status != PSA_SUCCESS) {
             return -EIO;
         }
