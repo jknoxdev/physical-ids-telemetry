@@ -225,7 +225,6 @@ static void state_armed_exit(void)
 {
     LOG_DBG("ARMED: exit — cancelling dwell and inactivity timers");
     k_work_cancel_delayable(&armed_dwell_work);
-    k_work_cancel_delayable(&inactivity_work);
 }
 
 static void state_armed_handle(const lima_event_t *evt) 

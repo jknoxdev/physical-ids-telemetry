@@ -1,0 +1,106 @@
+[00:00:00.347,198] <inf> udc_nrf: Preinit
+*** Booting nRF Connect SDK v3.2.2-74845e169be2 ***
+*** Using Zephyr OS v4.2.99-fe4f0106803e ***
+[00:00:00.362,792] <inf> udc_nrf: Initialized
+[00:00:00.363,220] <inf> lima_main: L.I.M.A. node firmware starting
+[00:00:00.363,250] <inf> lima_main: L.I.M.A.: suspending threads...
+[00:00:00.363,494] <inf> lima_main: BOOT: I2C bus recovery on P0.19/P0.20
+[00:00:00.364,013] <inf> lima_main: BOOT: I2C recovery complete
+[00:00:00.364,013] <inf> lima_main: MPU6050 ready
+[00:00:00.364,013] <inf> lima_main: BME280 ready
+[00:00:00.367,156] <inf> udc_nrf: SUSPEND state detected
+[00:00:00.651,458] <inf> udc_nrf: Reset
+[00:00:00.651,519] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.651,550] <inf> udc_nrf: RESUMING from suspend
+[00:00:00.910,980] <inf> udc_nrf: Reset
+[00:00:00.911,010] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.997,894] <inf> udc_nrf: SUSPEND state detected
+[00:00:01.035,766] <inf> udc_nrf: Reset
+[00:00:01.035,827] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:01.035,858] <inf> udc_nrf: RESUMING from suspend
+[00:00:01.108,703] <inf> udc_nrf: Reset
+[00:00:01.108,764] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:01.193,176] <inf> udc: Sequence 2 not completed
+[00:00:01.193,542] <inf> udc: Sequence 2 not completed
+[00:00:01.193,878] <inf> udc: Sequence 2 not completed
+[00:00:01.364,105] <inf> lima_main: USB settle: 1/6
+[00:00:02.364,288] <inf> lima_main: USB settle: 2/6
+[00:00:03.364,410] <inf> lima_main: USB settle: 3/6
+[00:00:04.365,020] <inf> lima_main: USB settle: 4/6
+[00:00:05.365,203] <inf> lima_main: USB settle: 5/6
+[00:00:06.365,509] <inf> lima_main: USB settle: 6/6
+[00:00:06.365,509] <inf> lima_main: Starting LIMA threads...
+[00:00:06.365,753] <inf> lima_main: FSM thread started
+[00:00:06.365,753] <inf> lima_fsm: FSM: Initializing work items
+[00:00:06.365,905] <inf> lima_fsm: BOOT: entered
+[00:00:06.365,936] <inf> lima_fsm: FSM: Initialized in BOOT
+[00:00:06.366,241] <inf> lima_fsm: FSM: BOOT -> CALIBRATING
+[00:00:06.366,271] <inf> lima_fsm: CALIBRATING: warming up sensors
+[00:00:06.366,485] <inf> lima_fsm: FSM: CALIBRATING -> ARMED
+[00:00:06.366,516] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:06.366,760] <inf> lima_main: Sensor thread started... sleeping 500ms for FSM boot & calibration...
+[00:00:06.866,912] <inf> lima_main: Sensor thread: 500ms expired...
+[00:00:06.871,154] <inf> lima_main: BARO: baseline set to 99.78 hPa
+[00:00:09.366,699] <inf> lima_fsm: ARMED: dwell timer expired -> sleep eligible
+[00:00:09.366,821] <inf> lima_fsm: ARMED: dwell complete -> LIGHT_SLEEP
+[00:00:09.367,004] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:00:09.367,126] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:00:09.367,156] <inf> lima_main: [SLEEP] light sleep active â waiting for sensor IRQ or inactivity timeout
+[00:00:11.640,625] <err> MPU6050: Failed to read data sample.
+[00:00:11.640,625] <wrn> lima_main: MPU6050: fetch failed (-5)
+[00:00:14.366,699] <inf> lima_fsm: INACTIVITY: 30s window reached -> Deep Sleep
+[00:00:14.366,821] <inf> lima_fsm: FSM: LIGHT_SLEEP -> DEEP_SLEEP
+[00:00:14.366,851] <inf> lima_fsm: DEEP SLEEP: BLE off, RTC wakeup only
+[00:00:14.366,943] <inf> lima_main: [SLEEP] deep sleep active â waiting for RTC wakeup event
+[00:00:14.366,943] <inf> lima_main: [STUB] ble_stop
+[00:00:20.367,004] <inf> lima_main: [RTC] wakeup timer fired â posting LIMA_EVT_RTC_WAKEUP
+[00:00:20.367,095] <inf> lima_fsm: DEEP SLEEP: RTC wakeup -> ARMED
+[00:00:20.367,248] <inf> lima_fsm: FSM: DEEP_SLEEP -> ARMED
+[00:00:20.367,248] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:23.367,462] <inf> lima_fsm: ARMED: dwell timer expired -> sleep eligible
+[00:00:23.367,584] <inf> lima_fsm: ARMED: dwell complete -> LIGHT_SLEEP
+[00:00:23.367,706] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:00:23.367,828] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:00:23.367,828] <inf> lima_main: [SLEEP] light sleep active â waiting for sensor IRQ or inactivity timeout
+[00:00:28.367,431] <inf> lima_fsm: INACTIVITY: 30s window reached -> Deep Sleep
+[00:00:28.367,553] <inf> lima_fsm: FSM: LIGHT_SLEEP -> DEEP_SLEEP
+[00:00:28.367,584] <inf> lima_fsm: DEEP SLEEP: BLE off, RTC wakeup only
+[00:00:28.367,584] <inf> lima_main: [SLEEP] deep sleep active â waiting for RTC wakeup event
+[00:00:28.367,614] <inf> lima_main: [STUB] ble_stop
+[00:00:34.367,889] <inf> lima_main: [RTC] wakeup timer fired â posting LIMA_EVT_RTC_WAKEUP
+[00:00:34.367,980] <inf> lima_fsm: DEEP SLEEP: RTC wakeup -> ARMED
+[00:00:34.368,103] <inf> lima_fsm: FSM: DEEP_SLEEP -> ARMED
+[00:00:34.368,133] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:37.368,194] <inf> lima_fsm: ARMED: dwell timer expired -> sleep eligible
+[00:00:37.368,408] <inf> lima_fsm: ARMED: dwell complete -> LIGHT_SLEEP
+[00:00:37.368,438] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:00:37.368,469] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:00:37.368,469] <inf> lima_main: [SLEEP] light sleep active â waiting for sensor IRQ or inactivity timeout
+[00:00:42.368,225] <inf> lima_fsm: INACTIVITY: 30s window reached -> Deep Sleep
+[00:00:42.368,377] <inf> lima_fsm: FSM: LIGHT_SLEEP -> DEEP_SLEEP
+[00:00:42.368,408] <inf> lima_fsm: DEEP SLEEP: BLE off, RTC wakeup only
+[00:00:42.368,438] <inf> lima_main: [SLEEP] deep sleep active â waiting for RTC wakeup event
+[00:00:42.368,438] <inf> lima_main: [STUB] ble_stop
+[00:00:48.368,499] <inf> lima_main: [RTC] wakeup timer fired â posting LIMA_EVT_RTC_WAKEUP
+[00:00:48.368,652] <inf> lima_fsm: DEEP SLEEP: RTC wakeup -> ARMED
+[00:00:48.368,682] <inf> lima_fsm: FSM: DEEP_SLEEP -> ARMED
+[00:00:48.368,713] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:51.368,804] <inf> lima_fsm: ARMED: dwell timer expired -> sleep eligible
+[00:00:51.368,927] <inf> lima_fsm: ARMED: dwell complete -> LIGHT_SLEEP
+[00:00:51.369,018] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:00:51.369,049] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:00:51.369,049] <inf> lima_main: [SLEEP] light sleep active â waiting for sensor IRQ or inactivity timeout
+[00:00:56.368,774] <inf> lima_fsm: INACTIVITY: 30s window reached -> Deep Sleep
+[00:00:56.368,927] <inf> lima_fsm: FSM: LIGHT_SLEEP -> DEEP_SLEEP
+[00:00:56.369,018] <inf> lima_fsm: DEEP SLEEP: BLE off, RTC wakeup only
+[00:00:56.369,049] <inf> lima_main: [SLEEP] deep sleep active â waiting for RTC wakeup event
+[00:00:56.369,049] <inf> lima_main: [STUB] ble_stop
+[00:01:02.369,110] <inf> lima_main: [RTC] wakeup timer fired â posting LIMA_EVT_RTC_WAKEUP
+[00:01:02.369,201] <inf> lima_fsm: DEEP SLEEP: RTC wakeup -> ARMED
+[00:01:02.369,232] <inf> lima_fsm: FSM: DEEP_SLEEP -> ARMED
+[00:01:02.369,354] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:01:05.369,445] <inf> lima_fsm: ARMED: dwell timer expired -> sleep eligible
+[00:01:05.369,720] <inf> lima_fsm: ARMED: dwell complete -> LIGHT_SLEEP
+[00:01:05.369,873] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:01:05.369,964] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:01:05.369,995] <inf> lima_main: [SLEEP] light sleep active â waiting for sensor IRQ or inactivity timeout

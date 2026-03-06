@@ -18,7 +18,7 @@ config LIMA_FSM_LOG_LEVEL
 
 config LIMA_DEEP_SLEEP_INTERVAL_MS
     int "Deep sleep wakeup interval (ms)"
-    default 45000
+    default 6000
 
 config LIMA_BARO_THRESHOLD_PA
     int "Barometric pressure breach threshold in Pascals"
@@ -26,7 +26,7 @@ config LIMA_BARO_THRESHOLD_PA
 
 # config LIMA_INACTIVITY_TIMEOUT_MS
 #     int "Inactivity timeout before deep sleep (ms)"
-#     default 30000
+#     default 6000
 #     help
 #       Total time (in ms) the device remains idle (including Light Sleep intervals) 
 #       before transitioning to Deep Sleep.
