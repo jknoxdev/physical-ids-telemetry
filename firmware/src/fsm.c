@@ -8,7 +8,9 @@
  */
 
 #include <zephyr/logging/log.h>
+#include <psa/crypto.h>
 #include "fsm.h"
+#include "crypto.h"
 
 LOG_MODULE_REGISTER(lima_fsm, LOG_LEVEL_INF);
 
@@ -350,12 +352,12 @@ static void state_event_detected_enter(void)
             fsm.last_event.type,
             fsm.last_event.timestamp_ms);
 
-    /* Kick off async signing; stub posts SIGNING_COMPLETE synchronously */
-    lima_event_t e = {
-        .type         = LIMA_EVT_SIGNING_COMPLETE,
-        .timestamp_ms = k_uptime_get_32(),
-    };
-    lima_post_event(&e);
+    // /* Kick off async signing; stub posts SIGNING_COMPLETE synchronously */
+    // lima_event_t e = {
+    //     .type         = LIMA_EVT_SIGNING_COMPLETE,
+    //     .timestamp_ms = k_uptime_get_32(),
+    // };
+    // lima_post_event(&e);
 
     transition(STATE_SIGNING);
 }
@@ -363,9 +365,41 @@ static void state_event_detected_enter(void)
 
 /* ── State: SIGNING ──────────────────────────────────────────────────────── */
 
+static void signing_complete_cb(const lima_sig_result_t *result)
+{
+    if (result->err != PSA_SUCCESS) {
+        LOG_ERR("SIGNING: crypto failed (%d) -> FAULT", result->err);
+        lima_event_t e = {
+            .type         = LIMA_EVT_SENSOR_FAULT,
+            .timestamp_ms = k_uptime_get_32(),
+        };
+        lima_post_event(&e);
+        return;
+    }
+
+    LOG_INF("SIGNING: sig[0..7]=%02X%02X%02X%02X%02X%02X%02X%02X",
+            result->sig[0], result->sig[1], result->sig[2], result->sig[3],
+            result->sig[4], result->sig[5], result->sig[6], result->sig[7]);
+
+    lima_event_t e = {
+        .type         = LIMA_EVT_SIGNING_COMPLETE,
+        .timestamp_ms = k_uptime_get_32(),
+    };
+    lima_post_event(&e);
+}
+
 static void state_signing_enter(void)
 {
-    LOG_INF("SIGNING: waiting for CryptoCell completion");
+    LOG_INF("SIGNING: building payload and signing...");
+
+    lima_payload_t payload;
+    lima_crypto_build_payload(&payload, &fsm.last_event);
+
+    int rc = lima_crypto_sign_async(&payload, signing_complete_cb);
+    if (rc != 0) {
+        LOG_ERR("EVENT_DETECTED: failed to start signing (%d) -> FAULT", rc);
+        transition(STATE_FAULT);
+    }
 }
 
 static void state_signing_handle(const lima_event_t *evt)
