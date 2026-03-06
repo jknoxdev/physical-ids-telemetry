@@ -12,4 +12,5 @@ project(lima_blinky)
 target_sources(app PRIVATE 
     src/main.c
     src/fsm.c
+    src/crypto.c
 )

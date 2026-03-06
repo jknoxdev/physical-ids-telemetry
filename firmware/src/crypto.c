@@ -45,8 +45,9 @@ static psa_status_t provision_key(void)
 {
     psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
 
-    psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_PERSISTENT);
-    psa_set_key_id(&attr, CONFIG_LIMA_CRYPTO_KEY_ID);
+    psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_VOLATILE);
+    // psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_PERSISTENT);
+    // psa_set_key_id(&attr, CONFIG_LIMA_CRYPTO_KEY_ID);
     psa_set_key_type(&attr,
         PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
     psa_set_key_bits(&attr, 256);

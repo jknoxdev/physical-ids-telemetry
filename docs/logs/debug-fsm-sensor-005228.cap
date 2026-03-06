@@ -1,0 +1,46 @@
+[00:00:00.000,274] <inf> udc_nrf: Preinit
+*** Booting nRF Connect SDK v3.2.2-74845e169be2 ***
+*** Using Zephyr OS v4.2.99-fe4f0106803e ***
+[00:00:00.016,571] <inf> udc_nrf: Initialized
+[00:00:00.016,693] <inf> lima_main: L.I.M.A. node firmware starting
+[00:00:00.016,693] <inf> lima_main: L.I.M.A.: suspending threads...
+[00:00:00.016,754] <inf> lima_main: BOOT: I2C bus recovery on P0.19/P0.20
+[00:00:00.016,906] <inf> lima_main: BOOT: I2C recovery complete
+[00:00:00.016,906] <inf> lima_main: MPU6050 ready
+[00:00:00.017,028] <inf> lima_main: BME280 ready
+[00:00:00.020,782] <inf> udc_nrf: SUSPEND state detected
+[00:00:00.317,718] <inf> udc_nrf: Reset
+[00:00:00.317,779] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.317,810] <inf> udc_nrf: RESUMING from suspend
+[00:00:00.390,838] <inf> udc_nrf: Reset
+[00:00:00.390,869] <inf> udc: ep 0x80 is not halted|disabled
+[00:00:00.475,280] <inf> udc: Sequence 2 not completed
+[00:00:00.475,769] <inf> udc: Sequence 2 not completed
+[00:00:00.476,287] <inf> udc: Sequence 2 not completed
+[00:00:01.017,120] <inf> lima_main: USB settle: 1/6
+[00:00:02.017,303] <inf> lima_main: USB settle: 2/6
+[00:00:03.017,395] <inf> lima_main: USB settle: 3/6
+[00:00:04.017,547] <inf> lima_main: USB settle: 4/6
+[00:00:05.017,669] <inf> lima_main: USB settle: 5/6
+[00:00:06.017,883] <inf> lima_main: USB settle: 6/6
+[00:00:06.018,127] <inf> lima_crypto: CRYPTO: no key at slot 0x00000001 â provisioning
+[00:00:06.018,768] <inf> lima_crypto: CRYPTO: P-256 keypair generated and stored in KMU slot 0x00000001
+[00:00:06.018,890] <err> lima_crypto: CRYPTO: public key export failed (-136)
+[00:00:06.018,890] <inf> lima_crypto: CRYPTO: initialized â ECDSA-P256/SHA-256 ready
+[00:00:06.018,981] <inf> lima_main: Starting LIMA threads...
+[00:00:06.019,134] <inf> lima_main: FSM thread started
+[00:00:06.019,134] <inf> lima_fsm: FSM: Initializing work items
+[00:00:06.019,348] <inf> lima_fsm: BOOT: entered
+[00:00:06.019,500] <inf> lima_fsm: FSM: Initialized in BOOT
+[00:00:06.019,531] <inf> lima_fsm: FSM: BOOT -> CALIBRATING
+[00:00:06.019,561] <inf> lima_fsm: CALIBRATING: warming up sensors
+[00:00:06.019,866] <inf> lima_fsm: FSM: CALIBRATING -> ARMED
+[00:00:06.019,989] <inf> lima_fsm: ARMED: sensors active, heartbeat started
+[00:00:06.020,233] <inf> lima_main: Sensor thread started... sleeping 500ms for FSM boot & calibration...
+[00:00:06.520,507] <inf> lima_main: Sensor thread: 500ms expired...
+[00:00:06.524,749] <inf> lima_main: BARO: baseline set to 99.92 hPa
+[00:00:09.020,050] <inf> lima_fsm: ARMED: dwell timer expired -> sleep eligible
+[00:00:09.020,202] <inf> lima_fsm: ARMED: dwell complete -> LIGHT_SLEEP
+[00:00:09.020,324] <inf> lima_fsm: FSM: ARMED -> LIGHT_SLEEP
+[00:00:09.020,416] <inf> lima_fsm: LIGHT SLEEP: low-power, sensor IRQs active
+[00:00:09.020,446] <inf> lima_main: [SLEEP] light sleep active â waiting for sensor IRQ or inactivity timeout

@@ -30,6 +30,7 @@
 #include <math.h>
 #include "events.h"
 #include "fsm.h"
+#include "crypto.h"
 
 LOG_MODULE_REGISTER(lima_main, LOG_LEVEL_INF);
 
@@ -527,6 +528,10 @@ int main(void)
 
     k_work_init_delayable(&sleep_led_work, sleep_led_expiry_fn);
     k_work_init_delayable(&rtc_wakeup_work, rtc_wakeup_expiry_fn);
+
+    if (lima_crypto_init() != 0) {
+        LOG_ERR("Crypto init failed — signing unavailable");
+    }
 
     LOG_INF("Starting LIMA threads...");
     k_thread_resume(fsm_thread);
