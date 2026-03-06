@@ -74,6 +74,7 @@ static float baro_baseline_hpa = 0.0f;
 static struct k_work_delayable sleep_led_work;
 static uint8_t sleep_led_on = 0;
 static uint32_t sleep_led_interval_ms = 0;
+static uint8_t sleep_led_white = 0;  /* 1 = white pulse (deep), 0 = red+blue (light) */
 
 /* RTC wakeup stub  */
 static struct k_work_delayable rtc_wakeup_work;
@@ -121,6 +122,7 @@ static void sleep_led_expiry_fn(struct k_work *work)
 {
     sleep_led_on = !sleep_led_on;
     gpio_pin_set_dt(&led_r, sleep_led_on ? 1 : 0);
+    gpio_pin_set_dt(&led_g, (sleep_led_on && sleep_led_white) ? 1 : 0);
     gpio_pin_set_dt(&led_b, sleep_led_on ? 1 : 0);
 
     /* Reschedule only if interval is still set */
@@ -397,11 +399,17 @@ void fsm_hw_set_led(lima_state_t state)
         break;
 
     case STATE_LIGHT_SLEEP:
+        sleep_led_white = 0;
         sleep_led_interval_ms = 2000;
         k_work_reschedule(&sleep_led_work, K_MSEC(sleep_led_interval_ms));
         break;
 
     case STATE_DEEP_SLEEP:
+        /* Slow white ghost-pulse — all three channels, 4s interval */
+        sleep_led_white = 1;
+        gpio_pin_set_dt(&led_r, 1);
+        gpio_pin_set_dt(&led_g, 1);
+        gpio_pin_set_dt(&led_b, 1);
         sleep_led_interval_ms = 4000;
         k_work_reschedule(&sleep_led_work, K_MSEC(sleep_led_interval_ms));
         break;
