@@ -193,7 +193,7 @@ Major technical decisions are documented in [`docs/architecture/adr/`](docs/arch
 ## Roadmap
 
 - [X] Firmware: IMU + barometric sensor drivers (Zephyr I2C)
-- [ ] Firmware: Event aggregator with independent OR trigger logic
+- [X] Firmware: Event aggregator with independent OR trigger logic
 - [ ] Firmware: CryptoCell-310 ECDSA-P256 signing & encryption
 - [ ] Firmware: BLE advertisement with signed payload
 - [ ] Gateway: BlueZ BLE scanner + paho MQTT publisher
