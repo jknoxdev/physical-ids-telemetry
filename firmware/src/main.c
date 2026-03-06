@@ -198,7 +198,7 @@ static float hw_read_baro(void)
     sensor_channel_get(bme, SENSOR_CHAN_PRESS, &baro_press);
 
     float abs_hpa = (float)sensor_value_to_double(&baro_press);
-
+    
     /* First reading sets the baseline */
     if (baro_baseline_hpa == 0.0f) {
         baro_baseline_hpa = abs_hpa;
@@ -206,8 +206,13 @@ static float hw_read_baro(void)
         return 0.0f;
     }
 
+    /* Compute delta BEFORE updating baseline */
     float delta_pa = (abs_hpa - baro_baseline_hpa) * 100.0f;
     LOG_DBG("BARO: %.2f hPa | delta %.2f Pa", (double)abs_hpa, (double)delta_pa);
+
+    /* Now walk baseline toward current reading to absorb slow drift */
+    baro_baseline_hpa += (abs_hpa - baro_baseline_hpa) * 0.01f;
+
     return delta_pa;
 }
 
@@ -435,7 +440,6 @@ static void sensor_thread_fn(void *p1, void *p2, void *p3)
             lima_post_event(&e);
             event_fired = true;
         }
-
         float delta_pa = hw_read_baro();
         if (fabsf(delta_pa) > CONFIG_LIMA_BARO_THRESHOLD_PA) {
             LOG_INF("BARO: delta=%.2f Pa (threshold=%d)", (double)delta_pa, CONFIG_LIMA_BARO_THRESHOLD_PA);
