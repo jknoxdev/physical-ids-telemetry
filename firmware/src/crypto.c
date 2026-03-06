@@ -133,8 +133,10 @@ int lima_crypto_init(void)
     /* 3. Open the key for use */
     signing_key_id = CONFIG_LIMA_CRYPTO_KEY_ID;
 
+    // nerfing for v1
     /* 4. Log public key for gateway registration (dev convenience) */
-    log_public_key(signing_key_id);
+    LOG_WRN("CRYPTO: nerfing public key export for v1 — sign only)");
+    // log_public_key(signing_key_id);
 
     LOG_INF("CRYPTO: initialized — ECDSA-P256/SHA-256 ready");
     return 0;
