@@ -12,10 +12,11 @@
 
 
 > ⚠️ **Work in Progress**
+> ---
+> Active development — FSM, CryptoCell signing, and BLE advertising complete.
 >
-> L.I.M.A Node is under active development. The current phase focuses on
-> stabilizing the firmware state machine before integrating sensors,
-> cryptographic packet signing, and radio transport.
+> Current phase: gateway receiver and persistent key storage.
+
 ---
 
 ## What is LIMA?
@@ -62,16 +63,19 @@ Each fires independently. An attacker must defeat both sensors simultaneously to
 > All diagrams are maintained as PlantUML source in [`docs/architecture/`](docs/architecture/) and auto-rendered to SVG + PNG on every push via GitHub Actions.
 --- 
 
-## Bench Prototyping & Logic Validation
+## FSM Pipeline Validation
 
-> **Current Phase:** Hardware-in-the-Loop (HIL) testing of the core FSM and I2C driver resilience.
+![LIMA BLE Validation](docs/media/ble-nrf-connect-2.png)
 
-![LIMA Bench Validation](docs/media/initial-fsm.gif)
+### Completed Milestones
+- **FSM:** Full state machine validated — `BOOT → CALIBRATING → ARMED → EVENT_DETECTED → SIGNING → TRANSMITTING → COOLDOWN` end-to-end in ~366µs (stub latency)
+- **CryptoCell-310:** Real ECDSA-P256 signing via PSA Crypto — 64-byte signature in ~107ms, hardware accelerated
+- **BLE:** Non-connectable advertisement of signed `lima_payload_t` — verified on nRF Connect, `-52 dBm` RSSI
+- **Sensors:** MPU6050 IMU + BME280 barometric, independent OR trigger logic, I2C bus recovery on boot
+- **Sleep:** `LIGHT_SLEEP → DEEP_SLEEP → RTC wakeup` cycle validated
 
-### Validation Goals
-* **Bus Resilience:** Confirmed the I2C recovery sequence (9-clock pulse) restores sensor comms after a simulated bus hang.
-* **State Mapping:** RGB status telemetry correctly reflects transitions from `ARMED` to `EVENT_DETECTED`.
-* **Async Handling:** Verified that high-frequency sensor polling (Prio 6) correctly feeds the FSM dispatch (Prio 5) without blocking.
+### Current Phase
+Gateway receiver — BlueZ BLE scanner, MQTT publisher, SQLite audit log.
 
 ---
 
@@ -194,8 +198,9 @@ Major technical decisions are documented in [`docs/architecture/adr/`](docs/arch
 
 - [X] Firmware: IMU + barometric sensor drivers (Zephyr I2C)
 - [X] Firmware: Event aggregator with independent OR trigger logic
-- [ ] Firmware: CryptoCell-310 ECDSA-P256 signing & encryption
-- [ ] Firmware: BLE advertisement with signed payload
+- [X] Firmware: CryptoCell-310 ECDSA-P256 signing (— ~107ms, hardware accelerated)
+- [ ] Firmware: CryptoCell-310 ECDSA-P256 encryption
+- [X] Firmware: BLE advertisement with signed payload — verified on nRF Connect
 - [ ] Gateway: BlueZ BLE scanner + paho MQTT publisher
 - [ ] Gateway: Mosquitto broker + event router
 - [ ] Gateway: SQLite audit log + queue-and-flush egress
