@@ -13,17 +13,61 @@
 
 > ⚠️ **Work in Progress**
 > ---
-> Active development — FSM, CryptoCell signing, and BLE advertising complete.
+> Active development.
 >
 > Current phase: gateway receiver and persistent key storage.
 
 ---
 
 ## What is LIMA?
-
 LIMA nodes are small, battery-powered sensors that detect physical integrity events — door opens, enclosure breaches, vehicle towing, cabinet punctures — and deliver cryptographically signed alerts to a local gateway, which routes them to operators via push notification, SIEM, or cloud audit trail.
 
 The system is designed to be **air-gapped first**. No cloud dependency for core operation. No persistent BLE connections. No trusted local network required. Just a node, a gateway, and a signed audit trail that survives internet outages.
+
+---
+## Threat Model
+
+LIMA is designed to detect and report physical integrity breaches in
+environments where network trust cannot be assumed.
+
+Primary adversary assumptions:
+
+• attacker may have physical access to the protected enclosure  
+• attacker may attempt to tamper with sensors or power  
+• local network infrastructure may be untrusted or unavailable  
+• internet connectivity may be intermittent or intentionally disrupted  
+
+Security goals:
+
+• detect physical intrusion events reliably  
+• produce cryptographically verifiable event records  
+• preserve a tamper-evident audit trail  
+• operate independently of cloud connectivity
+
+---
+## Project Status
+
+✔ FSM pipeline validated  
+✔ CryptoCell ECDSA signing working  
+✔ BLE advertisement verified  
+
+Current phase:
+Gateway receiver + MQTT + SQLite audit log
+
+---
+## Architecture
+
+### System Context
+![System Context](docs/architecture/context.png)
+
+### Node Firmware State Machine
+![State Machine](docs/architecture/state.png)
+
+> All diagrams are maintained as PlantUML source in [`docs/architecture/`](docs/architecture/) and auto-rendered to SVG + PNG on every push via GitHub Actions.
+
+---
+
+
 
 ## System Overview
 ![overview](docs/architecture/overview.png)
@@ -51,17 +95,6 @@ Each fires independently. An attacker must defeat both sensors simultaneously to
 | Gateway | Raspberry Pi Zero | BLE scanner + MQTT broker |
 
 ---
-
-## Architecture
-
-### System Context
-![System Context](docs/architecture/context.png)
-
-### Node Firmware State Machine
-![State Machine](docs/architecture/state.png)
-
-> All diagrams are maintained as PlantUML source in [`docs/architecture/`](docs/architecture/) and auto-rendered to SVG + PNG on every push via GitHub Actions.
---- 
 
 ## FSM Pipeline Validation
 
