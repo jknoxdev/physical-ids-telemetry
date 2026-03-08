@@ -208,9 +208,20 @@ static double hw_read_imu(void)
 
 static float hw_read_baro(void)
 {
-    sensor_sample_fetch(bme);
-    sensor_channel_get(bme, SENSOR_CHAN_PRESS, &baro_press);
+    int ret = sensor_sample_fetch(bme);
+    if (ret < 0) {
+        LOG_WRN("BME280: fetch failed (%d), attempting bus recovery", ret);
+        hw_i2c_bus_recovery();
+        k_msleep(10);
+        ret = sensor_sample_fetch(bme);
+        if (ret < 0) {
+            LOG_ERR("BME280: fetch failed after recovery (%d)", ret);
+            return 0.0f;
+        }
+        LOG_INF("BME280: recovered successfully");
+    }
 
+    sensor_channel_get(bme, SENSOR_CHAN_PRESS, &baro_press);
     float abs_hpa = (float)sensor_value_to_double(&baro_press);
     
     /* First reading sets the baseline */
