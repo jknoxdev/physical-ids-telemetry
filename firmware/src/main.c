@@ -27,6 +27,10 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/drivers/watchdog.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/settings/settings.h>
+#include "ble.h"
 #include <math.h>
 #include "events.h"
 #include "fsm.h"
@@ -83,6 +87,10 @@ static struct k_work_delayable rtc_wakeup_work;
 /* I2C prototype */
 static void hw_i2c_bus_recovery(void);
 
+/* onboard watchdog disable */
+const struct device *wdt = DEVICE_DT_GET(DT_NODELABEL(wdt0));
+
+
 /* ── Message queue ───────────────────────────────────────────────────────── */
 
 K_MSGQ_DEFINE(fsm_msgq, sizeof(lima_event_t), FSM_MSGQ_DEPTH, 4);
@@ -93,10 +101,10 @@ int lima_post_event(const lima_event_t *evt)
 }
 
 /* Non-blocking timer for cooldown */
-static struct k_work_delayable cooldown_work; 
+// static struct k_work_delayable cooldown_work; 
 
 /* Non-blocking timer tx timeout */
-static struct k_work_delayable tx_timeout_work;
+// static struct k_work_delayable tx_timeout_work;
 
 /* Threads */
 static void sensor_thread_fn(void *p1, void *p2, void *p3);
@@ -529,6 +537,7 @@ int main(void)
     LOG_INF("L.I.M.A. node firmware starting");
     LOG_INF("L.I.M.A.: suspending threads...");
 
+    wdt_disable(wdt);
     k_thread_suspend(fsm_thread);
     k_thread_suspend(sensor_thread);
     
@@ -544,22 +553,25 @@ int main(void)
     }
     
     for (int i = 0; i < 6; i++) {
+        LOG_INF("USB settle: %d/6 - start sleep", i + 1);
         k_msleep(1000);
-        LOG_INF("USB settle: %d/6", i + 1);
+        LOG_INF("USB settle: %d/6 - done", i + 1);
     }
 
-    k_work_init_delayable(&sleep_led_work, sleep_led_expiry_fn);
-    k_work_init_delayable(&rtc_wakeup_work, rtc_wakeup_expiry_fn);
-
-
+    settings_load();
+    
     if (lima_crypto_init() != 0) {
         LOG_ERR("Crypto init failed — signing unavailable");
     }
     
-    bt_enable();
+    bt_enable(NULL);
     if (lima_ble_init() != 0) {
         LOG_ERR("BLE init failed — transmitting unavailable");
     }
+
+
+    k_work_init_delayable(&sleep_led_work, sleep_led_expiry_fn);
+    k_work_init_delayable(&rtc_wakeup_work, rtc_wakeup_expiry_fn);
 
 
     LOG_INF("Starting LIMA threads...");
