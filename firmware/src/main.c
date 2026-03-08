@@ -80,6 +80,9 @@ static uint8_t sleep_led_white = 0;  /* 1 = white pulse (deep), 0 = red+blue (li
 /* RTC wakeup stub  */
 static struct k_work_delayable rtc_wakeup_work;
 
+/* I2C prototype */
+static void hw_i2c_bus_recovery(void);
+
 /* ── Message queue ───────────────────────────────────────────────────────── */
 
 K_MSGQ_DEFINE(fsm_msgq, sizeof(lima_event_t), FSM_MSGQ_DEPTH, 4);
@@ -177,8 +180,16 @@ static double hw_read_imu(void)
 {
     int ret = sensor_sample_fetch(mpu);
     if (ret < 0) {
-        LOG_WRN("MPU6050: fetch failed (%d)", ret);
-        return -1.0;
+        // LOG_WRN("MPU6050: fetch failed (%d)", ret);
+        LOG_WRN("MPU6050: fetch failed (%d), attempting bus recovery", ret);
+        hw_i2c_bus_recovery();
+        k_msleep(10);
+        ret = sensor_sample_fetch(mpu);
+        if (ret < 0) {
+            LOG_ERR("MPU6050: fetch failed after recovery (%d)", ret);
+            return -1.0;
+        }
+        LOG_INF("MPU6050: recovered successfully");
     }
     
     sensor_channel_get(mpu, SENSOR_CHAN_ACCEL_XYZ, accel);
